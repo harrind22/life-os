@@ -1,0 +1,1549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Life OS"/>
+<title>Life OS</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0f1729;--navy2:#19253d;--navy3:#253050;--navy4:#2e3a5c;
+  --accent:#4f8ef7;--accent2:#6ba3ff;--green:#3ecf8e;--red:#f56565;--gold:#f0b429;--purple:#9b8afb;
+  --canvas:#f7f6f2;--canvas2:#efefea;--canvas3:#e6e4dd;
+  --ink:#1a1a2e;--ink2:#3d3d5c;--ink3:#6b6b8a;
+  --tab-h:64px;
+  --mono:'SF Mono',ui-monospace,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --r:12px;--r-sm:8px;
+}
+html,body{height:100%;font-family:var(--sans);background:var(--canvas);color:var(--ink);font-size:15px;line-height:1.5;-webkit-text-size-adjust:100%}
+#root{display:flex;flex-direction:column;height:100%;max-width:600px;margin:0 auto;position:relative}
+
+/* TOPBAR */
+.topbar{background:var(--navy);color:var(--canvas);padding:14px 18px 12px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10;min-height:54px}
+.topbar-title{font-size:17px;font-weight:700;flex:1;letter-spacing:-.2px}
+.topbar-sub{font-size:11px;color:rgba(255,255,255,.5);font-family:var(--mono)}
+
+/* SCROLL AREA */
+.scroll-area{flex:1;overflow-y:auto;padding:16px 16px calc(var(--tab-h) + 16px);-webkit-overflow-scrolling:touch}
+
+/* BOTTOM NAV */
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:600px;height:var(--tab-h);background:#fff;border-top:1px solid var(--canvas3);display:flex;z-index:20;padding-bottom:env(safe-area-inset-bottom)}
+.tab-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:none;cursor:pointer;color:var(--ink3);font-size:10px;font-weight:600;letter-spacing:.3px;text-transform:uppercase;padding:8px 4px;position:relative;transition:color .15s}
+.tab-btn.active{color:var(--accent)}
+.tab-btn .tab-icon{font-size:20px;line-height:1}
+.tab-badge{position:absolute;top:6px;right:calc(50% - 18px);background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px;font-family:var(--mono)}
+
+/* CARDS */
+.card{background:#fff;border:1px solid var(--canvas3);border-radius:var(--r);padding:16px;margin-bottom:12px}
+.card-title{font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:12px}
+
+/* STAT TILES */
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
+.stat-tile{background:#fff;border:1px solid var(--canvas3);border-radius:var(--r);padding:14px 10px;text-align:center}
+.stat-num{font-size:26px;font-weight:700;font-family:var(--mono);color:var(--ink);line-height:1}
+.stat-label{font-size:10px;color:var(--ink3);margin-top:3px;text-transform:uppercase;letter-spacing:.5px}
+
+/* BUTTONS */
+.btn{padding:9px 18px;border-radius:var(--r-sm);border:none;cursor:pointer;font-size:14px;font-weight:600;font-family:var(--sans);transition:all .15s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-ghost{background:transparent;color:var(--ink2);border:1px solid var(--canvas3)}
+.btn-danger{background:#fff0f0;color:var(--red);border:1px solid #fcc}
+.btn-cal{background:#e8f5e9;color:#2e7d32;border:1px solid #c8e6c9}
+.btn-sm{padding:5px 12px;font-size:12px}
+.btn-full{width:100%;justify-content:center;padding:12px}
+
+/* PROGRESS */
+.prog-bar{height:5px;background:var(--canvas2);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;border-radius:3px;transition:width .4s}
+
+/* TAGS */
+.tag{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600;background:var(--canvas2);color:var(--ink2)}
+.tag.high{background:#fff0e0;color:#c05000}
+.tag.med{background:#e8f0fe;color:#1a56db}
+.tag.low{background:#f0fff4;color:#065f46}
+.tag.overdue{background:#fff0f0;color:#c00}
+.tag.due-today{background:#fff8e0;color:#a06000}
+.tag.upcoming{background:#f0f4ff;color:#3040a0}
+
+/* PROJECT LIST */
+.proj-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--canvas2);cursor:pointer;active:opacity:.7}
+.proj-row:last-child{border-bottom:none}
+.proj-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.proj-name{font-weight:600;font-size:15px;color:var(--ink);flex:1;min-width:0}
+.proj-sub{font-size:11px;color:var(--ink3)}
+
+/* TASKS */
+.task-row{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--canvas2)}
+.task-row:last-child{border-bottom:none}
+.task-cb{width:20px;height:20px;border-radius:5px;border:2px solid var(--canvas3);background:#fff;cursor:pointer;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.task-cb.done{background:var(--green);border-color:var(--green)}
+.task-cb.done::after{content:'✓';color:#fff;font-size:11px;font-weight:700}
+.task-text{flex:1;font-size:14px;color:var(--ink);line-height:1.4}
+.task-text.done{text-decoration:line-through;color:var(--ink3)}
+.task-meta{display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-top:4px}
+
+/* AI COACH */
+.coach-box{background:linear-gradient(135deg,var(--navy2),var(--navy3));border-radius:var(--r);padding:16px;color:var(--canvas);margin-bottom:12px;position:relative;overflow:hidden}
+.coach-box::before{content:'';position:absolute;top:-20px;right:-20px;width:70px;height:70px;border-radius:50%;background:var(--accent);opacity:.1}
+.coach-label{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--accent2);margin-bottom:6px}
+.coach-text{font-size:14px;line-height:1.6;color:var(--canvas)}
+.coach-chips{display:flex;gap:7px;margin-top:12px;flex-wrap:wrap}
+.coach-chip{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:var(--canvas);border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer;white-space:nowrap}
+
+/* HABITS */
+.habit-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--canvas2)}
+.habit-row:last-child{border-bottom:none}
+.habit-name{font-size:13px;font-weight:500;color:var(--ink);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.habit-dots{display:flex;gap:4px;flex-shrink:0}
+.habit-dot{width:26px;height:26px;border-radius:6px;cursor:pointer;border:1px solid var(--canvas3);transition:all .15s}
+.habit-dot.done{border:none}
+.habit-dot.today{outline:2px solid var(--accent);outline-offset:1px}
+.streak-text{font-size:11px;font-family:var(--mono);color:var(--ink3);min-width:28px;text-align:right}
+
+/* SCHEDULE */
+.sched-block{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:var(--r-sm);background:var(--canvas2);margin-bottom:8px;cursor:pointer;transition:background .15s}
+.sched-block:active{background:var(--canvas3)}
+.sched-time{font-size:12px;font-family:var(--mono);color:var(--ink3);min-width:44px;padding-top:1px}
+.sched-info{flex:1}
+.sched-title{font-size:14px;font-weight:600;color:var(--ink)}
+.sched-sub{font-size:12px;color:var(--ink3);margin-top:1px}
+
+/* REVIEW */
+.rating-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.rating-label{font-size:13px;color:var(--ink2);flex:1}
+.stars{display:flex;gap:5px}
+.star{font-size:22px;cursor:pointer;opacity:.25;transition:opacity .1s;line-height:1}
+.star.on{opacity:1}
+textarea.input{width:100%;border:1px solid var(--canvas3);border-radius:var(--r-sm);padding:10px 12px;font-family:var(--sans);font-size:14px;color:var(--ink);background:#fff;resize:none;min-height:80px;outline:none}
+textarea.input:focus{border-color:var(--accent)}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:50;display:flex;align-items:flex-end}
+.modal-sheet{background:#fff;border-radius:var(--r) var(--r) 0 0;padding:20px 18px calc(20px + env(safe-area-inset-bottom));width:100%;max-height:90vh;overflow-y:auto}
+.modal-handle{width:36px;height:4px;background:var(--canvas3);border-radius:2px;margin:0 auto 16px}
+.modal-title{font-size:17px;font-weight:700;color:var(--ink);margin-bottom:16px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--ink3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px}
+.field input,.field select,.field textarea{width:100%;border:1px solid var(--canvas3);border-radius:var(--r-sm);padding:10px 12px;font-family:var(--sans);font-size:15px;color:var(--ink);background:#fff;outline:none;-webkit-appearance:none}
+.field input:focus,.field select:focus{border-color:var(--accent)}
+.modal-actions{display:flex;gap:10px;margin-top:18px}
+.modal-actions .btn{flex:1;justify-content:center}
+
+/* PHASE BADGES */
+.phase-badge{font-size:10px;padding:2px 7px;border-radius:20px;font-weight:600}
+.phase-1{background:#e8f0fe;color:#1a56db}
+.phase-2{background:#fdf3e7;color:#b45309}
+.phase-3{background:#fce7f3;color:#9d174d}
+.phase-4{background:#d1fae5;color:#065f46}
+.auto-badge{font-size:10px;padding:2px 8px;border-radius:20px;background:#e8f5e9;color:#2e7d32;font-weight:600;border:1px solid #c8e6c9}
+
+/* DRAG */
+.proj-card{background:#fff;border:1px solid var(--canvas3);border-radius:var(--r);padding:14px;margin-bottom:10px;cursor:grab;user-select:none;transition:box-shadow .15s,border-color .15s;position:relative}
+.proj-card:active{box-shadow:0 4px 16px rgba(0,0,0,.12)}
+.proj-card.dragging{opacity:.4}
+.proj-card.drag-over{border-color:var(--accent);border-style:dashed}
+.rank-badge{position:absolute;top:10px;right:10px;font-size:10px;font-family:var(--mono);color:var(--ink3);background:var(--canvas2);padding:2px 6px;border-radius:8px}
+.area-section{margin-bottom:20px}
+.area-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+
+/* CALENDAR STATUS */
+.cal-status{font-size:13px;padding:8px 12px;border-radius:var(--r-sm);display:flex;align-items:center;gap:6px;margin-bottom:12px}
+.cal-status.success{background:#e8f5e9;color:#2e7d32}
+.cal-status.error{background:#fff0f0;color:#c62828}
+.cal-status.loading{background:#e3f2fd;color:#1565c0}
+
+/* BULK */
+.bulk-bar{background:var(--navy2);color:var(--canvas);padding:10px 12px;border-radius:var(--r-sm);display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;font-size:13px}
+.bulk-bar select{background:var(--navy3);color:var(--canvas);border:1px solid var(--navy4);border-radius:4px;padding:4px 8px;font-size:12px}
+
+/* EMPTY */
+.empty{text-align:center;padding:40px 20px;color:var(--ink3)}
+.empty-icon{font-size:36px;margin-bottom:10px}
+
+/* TODAY BANNER */
+.today-banner{background:var(--navy2);border-radius:var(--r);padding:14px 16px;margin-bottom:12px;cursor:pointer;display:flex;align-items:center;gap:12px}
+.today-banner-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent2);margin-bottom:3px}
+.today-banner-text{font-size:14px;color:var(--canvas);font-weight:500;line-height:1.3}
+
+/* UTIL */
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.checkbox-input{width:18px;height:18px;cursor:pointer;accent-color:var(--accent);flex-shrink:0;margin-top:2px}
+.dot-career{background:#4f8ef7}.dot-personal{background:#3ecf8e}.dot-health{background:#f0b429}.dot-finance{background:#9b8afb}.dot-home{background:#f687b3}
+.fill-career{background:#4f8ef7}.fill-personal{background:#3ecf8e}.fill-health{background:#f0b429}.fill-finance{background:#9b8afb}.fill-home{background:#f687b3}
+.section-head{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--ink3);margin:18px 0 8px}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-thumb{background:var(--canvas3);border-radius:10px}
+
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script>
+const {useState,useEffect,useCallback,useRef,useMemo}=React;
+const STORE_KEY='lifeos_v4';
+function loadData(){try{const r=localStorage.getItem(STORE_KEY);return r?JSON.parse(r):null}catch{return null}}
+function saveData(d){try{localStorage.setItem(STORE_KEY,JSON.stringify(d))}catch{}}
+
+const AREA_LABELS={career:'Career & CFA',personal:'Personal',health:'Health',finance:'Finance',home:'Home'};
+function areaHex(a){return{career:'#4f8ef7',personal:'#3ecf8e',health:'#f0b429',finance:'#9b8afb',home:'#f687b3'}[a]||'#888'}
+function todayKey(){return new Date().toISOString().slice(0,10)}
+function addDays(base,n){const d=new Date(base);d.setDate(d.getDate()+n);return d.toISOString().slice(0,10)}
+function weekDays(){
+  const today=new Date(),dow=today.getDay(),mon=new Date(today);
+  mon.setDate(today.getDate()-dow+1);
+  return Array.from({length:7},(_,i)=>{const d=new Date(mon);d.setDate(mon.getDate()+i);return d});
+}
+function dayName(d){return['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()]}
+function fullDayName(n){return['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][n]}
+function weekProgress(){const d=new Date();return Math.min(Math.round(((d.getDay()*24+d.getHours())/168)*100),100)}
+function calcStreak(log){let s=0;const t=new Date();for(let i=0;i<60;i++){const d=new Date(t);d.setDate(t.getDate()-i);if(log[d.toISOString().slice(0,10)])s++;else break;}return s;}
+function dueDateTag(due){
+  if(!due)return null;
+  const today=todayKey();
+  if(due<today)return'overdue';
+  if(due===today)return'due-today';
+  const diff=(new Date(due)-new Date(today))/(1000*86400);
+  if(diff<=3)return'upcoming';
+  return null;
+}
+function formatDue(due){
+  if(!due)return'';
+  const d=new Date(due+'T12:00:00');
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+}
+
+// ── CFA LEVEL II TASK GENERATOR ──────────────────────────────────────────
+function buildCFATasks(){
+  const start=new Date('2026-06-17');
+  function due(offsetDays){return addDays(start,offsetDays);}
+
+  // Phase 1: Prerequisites (days 0–10)
+  const prereqTasks=[
+    {id:'cfa-pr1',text:'Prerequisite: Economics — complete reading + EOC',done:false,priority:'high',due:due(3),phase:1},
+    {id:'cfa-pr2',text:'Prerequisite: Financial Reporting — complete reading + EOC',done:false,priority:'high',due:due(6),phase:1},
+    {id:'cfa-pr3',text:'Prerequisite: Quantitative Methods — complete reading + EOC',done:false,priority:'high',due:due(9),phase:1},
+  ];
+
+  // Phase 2: Core modules (days 10–78) — weighted by exam weight
+  const modules=[
+    {name:'Ethics',short:'Ethics',readings:4,weight:10,start:10,end:18},
+    {name:'Quantitative Methods',short:'Quant',readings:4,weight:6,start:18,end:23},
+    {name:'Economics',short:'Econ',readings:4,weight:6,start:23,end:28},
+    {name:'Financial Statement Analysis',short:'FSA',readings:6,weight:13,start:28,end:38},
+    {name:'Corporate Issuers',short:'Corp',readings:3,weight:8,start:38,end:44},
+    {name:'Equity Valuation',short:'Equity',readings:6,weight:13,start:44,end:54},
+    {name:'Fixed Income',short:'FI',readings:5,weight:11,start:54,end:63},
+    {name:'Derivatives',short:'Deriv',readings:4,weight:6,start:63,end:68},
+    {name:'Alternative Investments',short:'Alts',readings:3,weight:6,start:68,end:73},
+    {name:'Portfolio Management',short:'PM',readings:4,weight:8,start:73,end:78},
+  ];
+
+  const coreTasks=[];
+  modules.forEach(m=>{
+    const totalDays=m.end-m.start;
+    // Each reading gets its own task with evenly spaced due dates
+    const daysPerReading=Math.floor(totalDays/(m.readings+1)); // +1 for review task
+    for(let r=1;r<=m.readings;r++){
+      const dueOffset=m.start+Math.round(daysPerReading*r);
+      coreTasks.push({
+        id:`cfa-${m.short.toLowerCase()}-r${r}`,
+        text:`${m.name}: Reading ${r} — study + EOC problems`,
+        done:false,priority:m.weight>=11?'high':'med',
+        due:due(dueOffset),phase:2,
+        module:m.name
+      });
+    }
+    // Review/formula sheet task at end of module
+    coreTasks.push({
+      id:`cfa-${m.short.toLowerCase()}-review`,
+      text:`${m.name}: Topic review, formula sheet & summary notes`,
+      done:false,priority:'high',
+      due:due(m.end),phase:2,
+      module:m.name
+    });
+  });
+
+  // Phase 3: Mock exam week (days 78–85)
+  const mockTasks=[
+    {id:'cfa-mock1-am',text:'Mock Exam 1 — AM session (timed, full conditions)',done:false,priority:'high',due:due(80),phase:3},
+    {id:'cfa-mock1-pm',text:'Mock Exam 1 — PM session (timed, full conditions)',done:false,priority:'high',due:due(80),phase:3},
+    {id:'cfa-mock1-review',text:'Mock Exam 1 — Deep review: score every item set, flag weak topics',done:false,priority:'high',due:due(84),phase:3},
+    {id:'cfa-mock1-log',text:'Build weak topic list and prioritization plan for Phase 4',done:false,priority:'high',due:due(85),phase:3},
+  ];
+
+  // Phase 4: Weak area review (days 85–137) — placeholder tasks, user adjusts after mock
+  const weakTasks=[
+    {id:'cfa-weak1',text:'Phase 4: Deep dive — Weak Topic #1 (update after mock exam)',done:false,priority:'high',due:due(95),phase:4},
+    {id:'cfa-weak2',text:'Phase 4: Deep dive — Weak Topic #2 (update after mock exam)',done:false,priority:'high',due:due(105),phase:4},
+    {id:'cfa-weak3',text:'Phase 4: Deep dive — Weak Topic #3 (update after mock exam)',done:false,priority:'med',due:due(115),phase:4},
+    {id:'cfa-mock2-full',text:'Mock Exam 2 — Full AM+PM (timed)',done:false,priority:'high',due:due(120),phase:4},
+    {id:'cfa-mock2-review',text:'Mock Exam 2 — Review and final gap analysis',done:false,priority:'high',due:due(122),phase:4},
+    {id:'cfa-final-review',text:'Final formula sheet review and ethics re-read',done:false,priority:'high',due:due(133),phase:4},
+    {id:'cfa-exam-day',text:'🎯 CFA Level II Exam Day',done:false,priority:'high',due:due(137),phase:4},
+  ];
+
+  return [...prereqTasks,...coreTasks,...mockTasks,...weakTasks];
+}
+
+function defaultData(){
+  const cfaTasks=buildCFATasks();
+  return {
+    projects:[
+      {id:'p1',name:'CFA Level II',area:'career',color:'career',pct:0,autoCalc:true,
+       notes:'Target: Nov 1 2026 exam. 4 phases: prereqs → core modules → mock → weak areas. 52-day buffer.',
+       priority:0,tasks:cfaTasks},
+      {id:'p2',name:'Baird/Artisan Outreach',area:'career',color:'career',pct:10,autoCalc:false,notes:'Use existing coverage relationship',priority:1,tasks:[
+        {id:'t7',text:'Update resume for AM positioning',done:false,priority:'high',due:null},
+        {id:'t8',text:'Draft outreach to Baird contact',done:false,priority:'high',due:null},
+      ]},
+      {id:'p3',name:'Den/Office Renovation',area:'home',color:'home',pct:45,autoCalc:false,notes:'Navy walls, wainscoting, TV placement',priority:0,tasks:[
+        {id:'t4',text:'Finalize paint color (navy)',done:true,priority:'med',due:null},
+        {id:'t5',text:'Source wainscoting panels',done:false,priority:'med',due:null},
+        {id:'t6',text:'Schedule contractor walk-through',done:false,priority:'low',due:null},
+      ]},
+      {id:'p4',name:'Taxable Brokerage Build',area:'finance',color:'finance',pct:30,autoCalc:false,notes:'Coast FIRE reached; surplus → brokerage',priority:0,tasks:[
+        {id:'t9',text:'Set up auto-invest schedule',done:false,priority:'med',due:null},
+        {id:'t10',text:'Review Q2 portfolio allocation',done:false,priority:'low',due:null},
+      ]},
+    ],
+    habits:[
+      {id:'h1',name:'CFA study (≥1 hr)',color:'career',log:{}},
+      {id:'h2',name:'Exercise',color:'health',log:{}},
+      {id:'h3',name:'Read (non-CFA)',color:'personal',log:{}},
+      {id:'h4',name:'No late-night screens',color:'health',log:{}},
+    ],
+    schedule:[
+      {id:'s1',day:1,time:'06:00',duration:60,title:'CFA study block',projectId:'p1',notes:'Follow daily task'},
+      {id:'s2',day:1,time:'07:30',duration:30,title:'Exercise',projectId:null,notes:''},
+      {id:'s3',day:3,time:'06:00',duration:60,title:'CFA study block',projectId:'p1',notes:''},
+      {id:'s4',day:3,time:'12:00',duration:30,title:'Market review',projectId:'p4',notes:''},
+      {id:'s5',day:5,time:'06:00',duration:60,title:'CFA study block',projectId:'p1',notes:''},
+      {id:'s6',day:6,time:'08:00',duration:120,title:'Golf',projectId:null,notes:''},
+      {id:'s7',day:0,time:'19:00',duration:60,title:'Weekly review',projectId:null,notes:'Life OS review'},
+    ],
+    reviews:[],lastReviewDate:null,
+  };
+}
+
+function calcAutoPct(tasks){
+  if(!tasks||tasks.length===0)return 0;
+  const done=tasks.filter(t=>t.done).length;
+  return Math.round((done/tasks.length)*100);
+}
+
+// ── CLAUDE API ────────────────────────────────────────────────────────────
+async function askClaude(prompt){
+  const res=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,
+      system:`You are Daniel's direct personal executive coach in his Life OS. Daniel: VP at US Bancorp Fund Services, pursuing CFA Level II (target Nov 2026), targeting Baird/Artisan Partners. Married, young child, Milwaukee WI. Be specific, concise (2-4 sentences), direct. No generic advice. No empty praise.`,
+      messages:[{role:'user',content:prompt}]})
+  });
+  const d=await res.json();
+  return d.content?.[0]?.text||'Unable to reach coach.';
+}
+
+// ── PHASE HELPERS ─────────────────────────────────────────────────────────
+function phaseLabel(p){return['','Phase 1: Prereqs','Phase 2: Core','Phase 3: Mock','Phase 4: Weak areas'][p]||''}
+function phaseClass(p){return['','phase-1','phase-2','phase-3','phase-4'][p]||''}
+
+// ── COACH BOX ─────────────────────────────────────────────────────────────
+function CoachBox({data}){
+  const [text,setText]=useState('');const [loading,setLoading]=useState(false);
+  const chips=['What should I focus on this week?','Am I on track with CFA?','What blockers do I have?','Prioritize my open tasks'];
+  const ask=useCallback(async(q)=>{
+    setLoading(true);setText('');
+    const cfaProj=data.projects.find(p=>p.id==='p1');
+    const todayTasks=cfaProj?cfaProj.tasks.filter(t=>!t.done&&t.due&&t.due<=addDays(todayKey(),3)).slice(0,3):[];
+    const overdue=cfaProj?cfaProj.tasks.filter(t=>!t.done&&t.due&&t.due<todayKey()).length:0;
+    const ctx=`Today: ${new Date().toDateString()}. CFA pct: ${calcAutoPct(cfaProj?.tasks||[])}% done. Overdue CFA tasks: ${overdue}. Due soon: ${todayTasks.map(t=>t.text).join('; ')||'none'}. Other projects: ${data.projects.filter(p=>p.id!=='p1').map(p=>`${p.name} ${p.pct}%`).join(', ')}.`;
+    const reply=await askClaude(`${ctx}\n\nQuestion: ${q}`);
+    setText(reply);setLoading(false);
+  },[data]);
+  useEffect(()=>{ask('2-3 sentence briefing: what CFA task is due soonest and what else matters today?')},[]);
+  return React.createElement('div',{className:'coach-box'},
+    React.createElement('div',{className:'coach-label'},'⚡ AI Coach'),
+    loading?React.createElement('div',{className:'coach-text',style:{opacity:.5,fontStyle:'italic',display:'flex',alignItems:'center',gap:8}},React.createElement('div',{className:'spinner'}),' Thinking...'):React.createElement('div',{className:'coach-text'},text||'Ask me about your week.'),
+    React.createElement('div',{className:'coach-actions'},chips.map(c=>React.createElement('button',{key:c,className:'coach-chip',onClick:()=>ask(c)},c)))
+  );
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────────────────
+function Dashboard({data,setData,setView,setSelectedProject}){
+  const openCount=data.projects.flatMap(p=>p.tasks.filter(t=>!t.done)).length;
+  const doneToday=data.habits.filter(h=>h.log[todayKey()]).length;
+  const cfaProj=data.projects.find(p=>p.id==='p1');
+  const cfaPct=cfaProj?.autoCalc?calcAutoPct(cfaProj.tasks):cfaProj?.pct||0;
+  const overdueCount=data.projects.flatMap(p=>p.tasks.filter(t=>!t.done&&t.due&&t.due<todayKey())).length;
+  const days=weekDays(),todayIdx=new Date().getDay()===0?6:new Date().getDay()-1;
+  function toggleHabit(hid){const k=todayKey();setData(d=>({...d,habits:d.habits.map(h=>h.id===hid?{...h,log:{...h.log,[k]:!h.log[k]}}:h)}))}
+
+  // Today's CFA task
+  const todayCFA=cfaProj?.tasks.filter(t=>!t.done).sort((a,b)=>(a.due||'9999')>(b.due||'9999')?1:-1).slice(0,1)[0];
+
+  return React.createElement('div',null,
+    React.createElement(CoachBox,{data}),
+    // Today's CFA task banner
+    todayCFA&&React.createElement('div',{className:'card',style:{background:'var(--navy2)',border:'none',marginBottom:16,cursor:'pointer'},onClick:()=>{setSelectedProject('p1');setView('projects')}},
+      React.createElement('div',{style:{display:'flex',alignItems:'center',gap:12}},
+        React.createElement('div',{style:{fontSize:20}},'📖'),
+        React.createElement('div',{style:{flex:1}},
+          React.createElement('div',{style:{fontSize:11,fontWeight:700,letterSpacing:'1px',textTransform:'uppercase',color:'var(--accent2)',marginBottom:3}},"Today's CFA task"),
+          React.createElement('div',{style:{fontSize:14,color:'var(--canvas)',fontWeight:500}},todayCFA.text),
+          todayCFA.due&&React.createElement('div',{style:{fontSize:11,color:'var(--ink3)',marginTop:2}},`Due: ${formatDue(todayCFA.due)}`),
+        ),
+        React.createElement('div',{style:{fontSize:22,fontWeight:700,fontFamily:'var(--mono)',color:'var(--accent2)'}},`${cfaPct}%`),
+      )
+    ),
+    React.createElement('div',{className:'grid3',style:{marginBottom:16}},
+      React.createElement('div',{className:'stat-tile'},React.createElement('div',{className:'stat-num'},openCount),React.createElement('div',{className:'stat-label'},'Open tasks')),
+      React.createElement('div',{className:'stat-tile'},React.createElement('div',{className:'stat-num',style:{color:overdueCount>0?'var(--red)':'var(--ink)'}},overdueCount),React.createElement('div',{className:'stat-label'},'Overdue')),
+      React.createElement('div',{className:'stat-tile'},React.createElement('div',{className:'stat-num',style:{color:doneToday===data.habits.length?'var(--green)':'var(--ink)'}},`${doneToday}/${data.habits.length}`),React.createElement('div',{className:'stat-label'},'Habits today')),
+    ),
+    React.createElement('div',{className:'grid2'},
+      React.createElement('div',{className:'card'},
+        React.createElement('div',{className:'card-title'},'Projects'),
+        data.projects.map(p=>{
+          const pct=p.autoCalc?calcAutoPct(p.tasks):p.pct;
+          return React.createElement('div',{key:p.id,className:'project-row',onClick:()=>{setSelectedProject(p.id);setView('projects')}},
+            React.createElement('div',{className:`proj-dot dot-${p.color}`}),
+            React.createElement('div',{style:{flex:1}},
+              React.createElement('div',{className:'proj-name'},p.name),
+              React.createElement('div',{className:'proj-area'},AREA_LABELS[p.area]||p.area),
+            ),
+            React.createElement('div',{style:{display:'flex',alignItems:'center',gap:8}},
+              React.createElement('div',{className:'prog-bar'},React.createElement('div',{className:`prog-fill fill-${p.color}`,style:{width:`${pct}%`}})),
+              React.createElement('div',{style:{fontSize:12,fontFamily:'var(--mono)',color:'var(--ink2)',minWidth:36,textAlign:'right'}},`${pct}%`),
+            ),
+          );
+        })
+      ),
+      React.createElement('div',{className:'card'},
+        React.createElement('div',{className:'card-title'},'Habits this week'),
+        data.habits.map(h=>React.createElement('div',{key:h.id,className:'habit-row'},
+          React.createElement('div',{className:'habit-name'},h.name),
+          React.createElement('div',{className:'habit-dots'},days.map((d,i)=>{
+            const k=d.toISOString().slice(0,10),done=!!h.log[k],isToday=i===todayIdx;
+            return React.createElement('div',{key:i,className:`habit-dot${done?' done':''}${isToday?' today':''}`,style:{background:done?areaHex(h.color):'var(--canvas2)',width:22,height:22,borderRadius:5,cursor:'pointer'},onClick:()=>isToday&&toggleHabit(h.id)});
+          })),
+          React.createElement('div',{className:'habit-streak'},calcStreak(h.log)>0?`🔥${calcStreak(h.log)}`:''),
+        )),
+      ),
+    ),
+    // Overdue / due soon
+    React.createElement('div',{className:'card'},
+      React.createElement('div',{className:'card-title'},'Due soon & overdue'),
+      (()=>{
+        const urgent=data.projects.flatMap(p=>p.tasks.filter(t=>!t.done&&t.due&&t.due<=addDays(todayKey(),7)).map(t=>({...t,projName:p.name,color:p.color}))).sort((a,b)=>a.due>b.due?1:-1).slice(0,8);
+        if(urgent.length===0)return React.createElement('div',{className:'empty'},React.createElement('p',null,'No tasks due in the next 7 days.'));
+        return urgent.map(t=>{
+          const tag=dueDateTag(t.due);
+          return React.createElement('div',{key:t.id,className:'task-row'},
+            React.createElement('div',{className:'task-cb'}),
+            React.createElement('div',{className:'task-text'},t.text),
+            React.createElement('div',{className:'task-meta'},
+              tag&&React.createElement('span',{className:`tag ${tag}`},tag==='overdue'?'Overdue':tag==='due-today'?'Today':'Soon'),
+              React.createElement('span',{className:'tag'},formatDue(t.due)),
+              React.createElement('span',{className:`tag`},t.projName),
+            ),
+          );
+        });
+      })()
+    ),
+  );
+}
+
+// ── CALENDAR PUSH MODAL ───────────────────────────────────────────────────
+function CalendarPushModal({block,projects,onClose,onPushed}){
+  const [status,setStatus]=useState(null);const [msg,setMsg]=useState('');
+  const proj=block.projectId?projects.find(p=>p.id===block.projectId):null;
+  function nextOccurrence(dayNum,time){
+    const now=new Date(),today=now.getDay();
+    let diff=dayNum-today;
+    if(diff<0||(diff===0&&now.getHours()>=parseInt(time)))diff+=7;
+    const d=new Date(now);d.setDate(now.getDate()+diff);
+    const [h,m]=time.split(':');d.setHours(parseInt(h),parseInt(m),0,0);return d;
+  }
+  async function push(){
+    setStatus('loading');
+    const start=nextOccurrence(block.day,block.time);
+    const end=new Date(start.getTime()+block.duration*60000);
+    try{
+      const res=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:500,
+          system:'Calendar assistant. Use Google Calendar MCP to create the event. Reply only: SUCCESS or ERROR: reason.',
+          messages:[{role:'user',content:`Create event: Title="${block.title}", Start="${start.toISOString()}", End="${end.toISOString()}", TimeZone="America/Chicago"${proj?`, Description="Project: ${proj.name}"`:''}.`}],
+          mcp_servers:[{type:'url',url:'https://calendarmcp.googleapis.com/mcp/v1',name:'google-calendar'}]
+        })
+      });
+      const data=await res.json();
+      const txt=data.content?.map(c=>c.text||'').join('')||'';
+      if(txt.includes('SUCCESS')||txt.includes('created')||txt.includes('event')){
+        setStatus('success');setMsg(`Added: ${block.title}`);setTimeout(()=>onPushed(),1500);
+      } else {setStatus('error');setMsg(txt.slice(0,120));}
+    }catch(e){setStatus('error');setMsg(e.message);}
+  }
+  const start=nextOccurrence(block.day,block.time);
+  const end=new Date(start.getTime()+block.duration*60000);
+  return React.createElement('div',{className:'modal-backdrop'},
+    React.createElement('div',{className:'modal'},
+      React.createElement('h3',null,'📅 Push to Google Calendar'),
+      React.createElement('div',{style:{background:'var(--canvas2)',borderRadius:'var(--r-sm)',padding:'12px 14px',marginBottom:16}},
+        React.createElement('div',{style:{fontWeight:700,fontSize:15,color:'var(--ink)',marginBottom:4}},block.title),
+        React.createElement('div',{style:{fontSize:13,color:'var(--ink2)'}},`${fullDayName(block.day)} ${block.time} · ${block.duration} min`),
+        React.createElement('div',{style:{fontSize:12,color:'var(--ink3)',marginTop:4}},`Next: ${start.toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'})} ${start.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})} – ${end.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}`),
+      ),
+      status==='success'&&React.createElement('div',{className:'cal-status success',style:{marginBottom:12}},`✓ ${msg}`),
+      status==='error'&&React.createElement('div',{className:'cal-status error',style:{marginBottom:12}},`✗ ${msg}`),
+      status==='loading'&&React.createElement('div',{className:'cal-status loading',style:{marginBottom:12}},'Adding to calendar...'),
+      React.createElement('div',{className:'modal-actions'},
+        React.createElement('button',{className:'btn btn-ghost',onClick:onClose},'Cancel'),
+        status!=='success'&&React.createElement('button',{className:'btn btn-cal',onClick:push,disabled:status==='loading'},status==='loading'?'Adding...':'Add to Google Calendar'),
+      ),
+    )
+  );
+}
+
+// ── PROJECTS VIEW ─────────────────────────────────────────────────────────
+function ProjectsView({data,setData,selectedProject,setSelectedProject}){
+  const [modal,setModal]=useState(false);
+  const [taskModal,setTaskModal]=useState(null);
+  const [coaching,setCoaching]=useState({});
+  const [coachLoading,setCoachLoading]=useState({});
+  const [bulkSelected,setBulkSelected]=useState([]);
+  const [bulkAction,setBulkAction]=useState('');
+  const [dragId,setDragId]=useState(null);
+  const [dragOverId,setDragOverId]=useState(null);
+  const [editingTask,setEditingTask]=useState(null);
+  const [phaseFilter,setPhaseFilter]=useState('all'); // all | 1 | 2 | 3 | 4 | open | overdue
+
+  const proj=selectedProject?data.projects.find(p=>p.id===selectedProject):null;
+
+  function applyBulk(){
+    if(!bulkAction||bulkSelected.length===0)return;
+    const pid=proj.id;
+    setData(d=>({...d,projects:d.projects.map(p=>{
+      if(p.id!==pid)return p;
+      return {...p,tasks:p.tasks.map(t=>{
+        if(!bulkSelected.includes(t.id))return t;
+        if(bulkAction==='done')return{...t,done:true};
+        if(bulkAction==='undone')return{...t,done:false};
+        if(bulkAction==='delete')return null;
+        if(['high','med','low'].includes(bulkAction))return{...t,priority:bulkAction};
+        return t;
+      }).filter(Boolean)};
+    })}));
+    setBulkSelected([]);setBulkAction('');
+  }
+  function toggleBulkSelect(tid){setBulkSelected(s=>s.includes(tid)?s.filter(x=>x!==tid):[...s,tid])}
+
+  function handleDragStart(e,pid){setDragId(pid);e.dataTransfer.effectAllowed='move';}
+  function handleDragOver(e,pid){e.preventDefault();setDragOverId(pid);}
+  function handleDrop(e,targetPid){
+    e.preventDefault();
+    if(!dragId||dragId===targetPid){setDragId(null);setDragOverId(null);return;}
+    setData(d=>{
+      const dragP=d.projects.find(p=>p.id===dragId);
+      const targetP=d.projects.find(p=>p.id===targetPid);
+      if(!dragP||!targetP||dragP.area!==targetP.area){setDragId(null);setDragOverId(null);return d;}
+      const areaPs=d.projects.filter(p=>p.area===dragP.area).sort((a,b)=>(a.priority||0)-(b.priority||0));
+      const dragIdx=areaPs.findIndex(p=>p.id===dragId);
+      const targetIdx=areaPs.findIndex(p=>p.id===targetPid);
+      const reordered=[...areaPs];reordered.splice(dragIdx,1);reordered.splice(targetIdx,0,dragP);
+      const up={};reordered.forEach((p,i)=>up[p.id]=i);
+      return {...d,projects:d.projects.map(p=>up[p.id]!==undefined?{...p,priority:up[p.id]}:p)};
+    });
+    setDragId(null);setDragOverId(null);
+  }
+
+  function addProject(vals){
+    const np={id:'p'+Date.now(),name:vals.name,area:vals.area,color:vals.area,pct:0,autoCalc:false,notes:vals.notes||'',priority:data.projects.filter(p=>p.area===vals.area).length,tasks:[]};
+    setData(d=>({...d,projects:[...d.projects,np]}));setModal(false);
+  }
+  function updatePct(pid,pct){setData(d=>({...d,projects:d.projects.map(p=>p.id===pid?{...p,pct:parseInt(pct)}:p)}))}
+  function toggleAutoCalc(pid){setData(d=>({...d,projects:d.projects.map(p=>p.id===pid?{...p,autoCalc:!p.autoCalc}:p)}))}
+  function toggleTask(pid,tid){
+    setData(d=>({...d,projects:d.projects.map(p=>{
+      if(p.id!==pid)return p;
+      const tasks=p.tasks.map(t=>t.id===tid?{...t,done:!t.done}:t);
+      const pct=p.autoCalc?calcAutoPct(tasks):p.pct;
+      return {...p,tasks,pct};
+    })}));
+  }
+  function addTask(pid,vals){
+    const nt={id:'t'+Date.now(),text:vals.text,done:false,priority:vals.priority||'med',due:vals.due||null,phase:null};
+    setData(d=>({...d,projects:d.projects.map(p=>p.id===pid?{...p,tasks:[...p.tasks,nt]}:p)}));setTaskModal(null);
+  }
+  function saveEditTask(){
+    if(!editingTask)return;
+    setData(d=>({...d,projects:d.projects.map(p=>p.id===editingTask.pid?{...p,tasks:p.tasks.map(t=>t.id===editingTask.tid?{...t,text:editingTask.text,priority:editingTask.priority,due:editingTask.due||null}:t)}:p)}));
+    setEditingTask(null);
+  }
+  function deleteTask(pid,tid){setData(d=>({...d,projects:d.projects.map(p=>p.id===pid?{...p,tasks:p.tasks.filter(t=>t.id!==tid)}:p)}))}
+  function deleteProject(pid){setData(d=>({...d,projects:d.projects.filter(p=>p.id!==pid)}));setSelectedProject(null);}
+
+  async function getCoaching(p){
+    setCoachLoading(c=>({...c,[p.id]:true}));
+    const overdue=p.tasks.filter(t=>!t.done&&t.due&&t.due<todayKey()).length;
+    const open=p.tasks.filter(t=>!t.done).length;
+    const pct=p.autoCalc?calcAutoPct(p.tasks):p.pct;
+    const reply=await askClaude(`Project: "${p.name}". Progress: ${pct}%. Open: ${open} tasks. Overdue: ${overdue}. Notes: ${p.notes}. 2 coaching points: biggest risk/blocker and single most important next action.`);
+    setCoaching(c=>({...c,[p.id]:reply}));setCoachLoading(c=>({...c,[p.id]:false}));
+  }
+
+  // ── DETAIL VIEW ──────────────────────────────────────────────────────
+  if(proj){
+    const pct=proj.autoCalc?calcAutoPct(proj.tasks):proj.pct;
+    const isCFA=proj.id==='p1';
+
+    let displayTasks=proj.tasks;
+    if(phaseFilter==='open')displayTasks=proj.tasks.filter(t=>!t.done);
+    else if(phaseFilter==='overdue')displayTasks=proj.tasks.filter(t=>!t.done&&t.due&&t.due<todayKey());
+    else if(['1','2','3','4'].includes(phaseFilter))displayTasks=proj.tasks.filter(t=>String(t.phase)===phaseFilter);
+    const openDisplay=displayTasks.filter(t=>!t.done);
+    const doneDisplay=displayTasks.filter(t=>t.done);
+    const allSelected=bulkSelected.length>0&&bulkSelected.length===openDisplay.length;
+
+    return React.createElement('div',null,
+      React.createElement('div',{style:{display:'flex',alignItems:'center',gap:12,marginBottom:20}},
+        React.createElement('button',{className:'btn btn-ghost btn-sm',onClick:()=>{setSelectedProject(null);setBulkSelected([]);setPhaseFilter('all')}},'← All projects'),
+        React.createElement('div',{className:`proj-dot dot-${proj.color}`,style:{width:14,height:14}}),
+        React.createElement('h3',{style:{fontSize:18,fontWeight:700,color:'var(--ink)',flex:1}},proj.name),
+        React.createElement('button',{className:'btn btn-danger btn-sm',onClick:()=>window.confirm('Delete project?')&&deleteProject(proj.id)},'Delete'),
+      ),
+      // Progress card
+      React.createElement('div',{className:'card'},
+        React.createElement('div',{style:{display:'flex',alignItems:'center',gap:16,marginBottom:12}},
+          React.createElement('div',{style:{flex:1}},
+            React.createElement('div',{style:{display:'flex',alignItems:'center',gap:10,marginBottom:6}},
+              React.createElement('div',{className:'card-title',style:{marginBottom:0}},'Progress'),
+              React.createElement('div',{
+                className:'auto-pct-badge',
+                style:{cursor:'pointer'},
+                onClick:()=>toggleAutoCalc(proj.id),
+                title:'Toggle auto-calculate from tasks'
+              },proj.autoCalc?'Auto (from tasks)':'Manual — click to auto'),
+            ),
+            !proj.autoCalc&&React.createElement('input',{type:'range',min:0,max:100,value:proj.pct,style:{width:'100%'},onChange:e=>updatePct(proj.id,e.target.value)}),
+            proj.autoCalc&&React.createElement('div',{style:{fontSize:12,color:'var(--ink3)',marginTop:4}},`${proj.tasks.filter(t=>t.done).length} of ${proj.tasks.length} tasks complete`),
+            !proj.autoCalc&&React.createElement('div',{style:{fontSize:13,color:'var(--ink3)',marginTop:4}},`${pct}% complete`),
+          ),
+          React.createElement('div',{style:{textAlign:'center'}},React.createElement('div',{style:{fontSize:36,fontWeight:700,fontFamily:'var(--mono)',color:areaHex(proj.color)}},`${pct}%`)),
+        ),
+        proj.notes&&React.createElement('div',{style:{fontSize:13,color:'var(--ink3)',borderTop:'1px solid var(--canvas2)',paddingTop:10}},proj.notes),
+      ),
+      coaching[proj.id]&&React.createElement('div',{className:'coach-box',style:{marginBottom:16}},React.createElement('div',{className:'coach-label'},'⚡ Project Coach'),React.createElement('div',{className:'coach-text'},coaching[proj.id])),
+      !coaching[proj.id]&&React.createElement('button',{className:'btn btn-ghost',style:{marginBottom:16,width:'100%'},onClick:()=>getCoaching(proj),disabled:coachLoading[proj.id]},coachLoading[proj.id]?'Getting coaching...':'⚡ Get AI coaching on this project'),
+      // Tasks
+      React.createElement('div',{className:'card'},
+        React.createElement('div',{style:{display:'flex',alignItems:'center',marginBottom:12,gap:8,flexWrap:'wrap'}},
+          React.createElement('div',{className:'card-title',style:{marginBottom:0,flex:1}},'Tasks'),
+          isCFA&&React.createElement('select',{value:phaseFilter,onChange:e=>setPhaseFilter(e.target.value),style:{fontSize:12,border:'1px solid var(--canvas3)',borderRadius:4,padding:'4px 8px',color:'var(--ink)'}},
+            React.createElement('option',{value:'all'},'All tasks'),
+            React.createElement('option',{value:'open'},'Open only'),
+            React.createElement('option',{value:'overdue'},'Overdue'),
+            React.createElement('option',{value:'1'},'Phase 1: Prereqs'),
+            React.createElement('option',{value:'2'},'Phase 2: Core modules'),
+            React.createElement('option',{value:'3'},'Phase 3: Mock exam'),
+            React.createElement('option',{value:'4'},'Phase 4: Weak areas'),
+          ),
+          React.createElement('button',{className:'btn btn-ghost btn-sm',onClick:()=>{const open=openDisplay.map(t=>t.id);setBulkSelected(s=>s.length===open.length?[]:open)}},allSelected?'Deselect all':'Select all'),
+          React.createElement('button',{className:'btn btn-primary btn-sm',onClick:()=>setTaskModal(proj.id)},'+ Add'),
+        ),
+        bulkSelected.length>0&&React.createElement('div',{className:'bulk-bar'},
+          React.createElement('span',null,`${bulkSelected.length} selected`),
+          React.createElement('select',{value:bulkAction,onChange:e=>setBulkAction(e.target.value)},
+            React.createElement('option',{value:''},'— Bulk action —'),
+            React.createElement('option',{value:'done'},'Mark done'),
+            React.createElement('option',{value:'undone'},'Mark not done'),
+            React.createElement('option',{value:'high'},'→ High'),
+            React.createElement('option',{value:'med'},'→ Medium'),
+            React.createElement('option',{value:'low'},'→ Low'),
+            React.createElement('option',{value:'delete'},'Delete'),
+          ),
+          React.createElement('button',{className:'btn btn-primary btn-sm',onClick:applyBulk,disabled:!bulkAction},'Apply'),
+          React.createElement('button',{className:'btn btn-ghost btn-sm',onClick:()=>setBulkSelected([])},'Clear'),
+        ),
+        openDisplay.length===0&&doneDisplay.length===0&&React.createElement('div',{className:'empty'},React.createElement('p',null,'No tasks in this view.')),
+        openDisplay.map(t=>{
+          const isEditing=editingTask&&editingTask.tid===t.id;
+          const tag=dueDateTag(t.due);
+          return React.createElement('div',{key:t.id,className:'task-row'},
+            React.createElement('input',{type:'checkbox',className:'checkbox-input',checked:bulkSelected.includes(t.id),onChange:()=>toggleBulkSelect(t.id)}),
+            React.createElement('div',{className:'task-cb',onClick:()=>toggleTask(proj.id,t.id)}),
+            isEditing
+              ? React.createElement('div',{style:{flex:1,display:'flex',gap:6,alignItems:'center',flexWrap:'wrap'}},
+                  React.createElement('input',{style:{flex:1,minWidth:120,border:'1px solid var(--accent)',borderRadius:4,padding:'3px 7px',fontSize:13,fontFamily:'var(--sans)'},value:editingTask.text,onChange:e=>setEditingTask({...editingTask,text:e.target.value}),onKeyDown:e=>e.key==='Enter'&&saveEditTask(),autoFocus:true}),
+                  React.createElement('select',{value:editingTask.priority,onChange:e=>setEditingTask({...editingTask,priority:e.target.value}),style:{fontSize:12,border:'1px solid var(--canvas3)',borderRadius:4,padding:'3px 6px'}},
+                    React.createElement('option',{value:'high'},'High'),React.createElement('option',{value:'med'},'Med'),React.createElement('option',{value:'low'},'Low'),
+                  ),
+                  React.createElement('input',{type:'date',value:editingTask.due||'',onChange:e=>setEditingTask({...editingTask,due:e.target.value}),style:{fontSize:12,border:'1px solid var(--canvas3)',borderRadius:4,padding:'3px 6px'}}),
+                  React.createElement('button',{className:'btn btn-primary btn-sm',onClick:saveEditTask},'Save'),
+                  React.createElement('button',{className:'btn btn-ghost btn-sm',onClick:()=>setEditingTask(null)},'×'),
+                )
+              : React.createElement('div',{className:'task-text',style:{flex:1}},t.text),
+            !isEditing&&React.createElement('div',{className:'task-meta'},
+              t.phase&&React.createElement('span',{className:`phase-badge ${phaseClass(t.phase)}`},`P${t.phase}`),
+              tag&&React.createElement('span',{className:`tag ${tag}`},tag==='overdue'?'Overdue':tag==='due-today'?'Today':'Soon'),
+              t.due&&React.createElement('span',{className:'tag'},formatDue(t.due)),
+              React.createElement('span',{className:`tag ${t.priority}`},t.priority),
+              React.createElement('button',{className:'btn btn-ghost btn-sm',style:{padding:'2px 7px',fontSize:11},onClick:()=>setEditingTask({pid:proj.id,tid:t.id,text:t.text,priority:t.priority,due:t.due||''})},'edit'),
+              React.createElement('button',{className:'btn btn-danger btn-sm',style:{padding:'2px 6px',fontSize:11},onClick:()=>deleteTask(proj.id,t.id)},'✕'),
+            ),
+          );
+        }),
+        doneDisplay.length>0&&React.createElement('div',{style:{marginTop:10,borderTop:'1px solid var(--canvas2)',paddingTop:10}},
+          React.createElement('div',{style:{fontSize:11,color:'var(--ink3)',marginBottom:8}},`${doneDisplay.length} completed`),
+          doneDisplay.slice(0,10).map(t=>React.createElement('div',{key:t.id,className:'task-row'},
+            React.createElement('div',{className:'task-cb done'}),
+            React.createElement('div',{className:'task-text done',style:{flex:1}},t.text),
+            React.createElement('button',{className:'btn btn-ghost btn-sm',style:{padding:'2px 6px',fontSize:11},onClick:()=>toggleTask(proj.id,t.id)},'undo'),
+          )),
+          doneDisplay.length>10&&React.createElement('div',{style:{fontSize:11,color:'var(--ink3)',marginTop:6}},`+${doneDisplay.length-10} more completed`),
+        ),
+      ),
+      taskModal&&React.createElement(TaskModal,{onSave:v=>addTask(taskModal,v),onClose:()=>setTaskModal(null)}),
+    );
+  }
+
+  // ── LIST VIEW ────────────────────────────────────────────────────────
+  const areas=Object.keys(AREA_LABELS);
+  return React.createElement('div',null,
+    React.createElement('button',{className:'btn btn-primary',style:{marginBottom:16},onClick:()=>setModal(true)},'+ New project'),
+    React.createElement('div',{className:'drag-hint'},'☰ Drag projects within an area to set priority'),
+    areas.map(area=>{
+      const areaProjects=[...data.projects.filter(p=>p.area===area)].sort((a,b)=>(a.priority||0)-(b.priority||0));
+      if(!areaProjects.length)return null;
+      return React.createElement('div',{key:area,className:'area-section'},
+        React.createElement('div',{className:'area-header'},
+          React.createElement('div',{style:{width:8,height:8,borderRadius:'50%',background:areaHex(area)}}),
+          React.createElement('div',{className:'area-label-text'},AREA_LABELS[area]),
+        ),
+        areaProjects.map((p,i)=>{
+          const pct=p.autoCalc?calcAutoPct(p.tasks):p.pct;
+          const overdue=p.tasks.filter(t=>!t.done&&t.due&&t.due<todayKey()).length;
+          return React.createElement('div',{
+            key:p.id,className:`proj-card${dragId===p.id?' dragging':''}${dragOverId===p.id&&dragId!==p.id?' drag-over':''}`,
+            draggable:true,onDragStart:e=>handleDragStart(e,p.id),onDragOver:e=>handleDragOver(e,p.id),
+            onDrop:e=>handleDrop(e,p.id),onDragEnd:()=>{setDragId(null);setDragOverId(null);},
+            onClick:()=>setSelectedProject(p.id),
+          },
+            React.createElement('div',{className:'rank-badge'},`#${i+1}`),
+            React.createElement('div',{style:{display:'flex',alignItems:'center',gap:10,marginBottom:8}},
+              React.createElement('div',{className:`proj-dot dot-${p.color}`,style:{width:10,height:10}}),
+              React.createElement('div',{style:{fontWeight:700,fontSize:14,color:'var(--ink)',flex:1}},p.name),
+              p.autoCalc&&React.createElement('span',{className:'auto-pct-badge'},'Auto'),
+              React.createElement('div',{style:{fontSize:18,fontWeight:700,fontFamily:'var(--mono)',color:areaHex(p.color)}},`${pct}%`),
+            ),
+            React.createElement('div',{style:{background:'var(--canvas2)',height:5,borderRadius:3,overflow:'hidden',marginBottom:6}},
+              React.createElement('div',{className:`prog-fill fill-${p.color}`,style:{width:`${pct}%`,height:'100%'}}),
+            ),
+            React.createElement('div',{style:{display:'flex',justifyContent:'space-between',fontSize:11,color:'var(--ink3)'}},
+              React.createElement('span',null,p.notes?.slice(0,50)||''),
+              React.createElement('span',{style:{fontFamily:'var(--mono)',color:overdue>0?'var(--red)':'var(--ink3)'}},overdue>0?`${overdue} overdue`:`${p.tasks.filter(t=>!t.done).length} open`),
+            ),
+          );
+        })
+      );
+    }),
+    modal&&React.createElement(ProjectModal,{onSave:addProject,onClose:()=>setModal(false)}),
+  );
+}
+
+function ProjectModal({onSave,onClose}){
+  const [v,setV]=useState({name:'',area:'career',notes:''});
+  return React.createElement('div',{className:'modal-backdrop'},
+    React.createElement('div',{className:'modal'},
+      React.createElement('h3',null,'New project'),
+      React.createElement('div',{className:'field'},React.createElement('label',null,'Name'),React.createElement('input',{value:v.name,onChange:e=>setV({...v,name:e.target.value}),autoFocus:true})),
+      React.createElement('div',{className:'field'},React.createElement('label',null,'Area'),React.createElement('select',{value:v.area,onChange:e=>setV({...v,area:e.target.value})},Object.entries(AREA_LABELS).map(([k,l])=>React.createElement('option',{key:k,value:k},l)))),
+      React.createElement('div',{className:'field'},React.createElement('label',null,'Notes'),React.createElement('textarea',{value:v.notes,onChange:e=>setV({...v,notes:e.target.value})})),
+      React.createElement('div',{className:'modal-actions'},
+        React.createElement('button',{className:'btn btn-ghost',onClick:onClose},'Cancel'),
+        React.createElement('button',{className:'btn btn-primary',onClick:()=>v.name&&onSave(v),disabled:!v.name},'Create'),
+      ),
+    )
+  );
+}
+function TaskModal({onSave,onClose}){
+  const [v,setV]=useState({text:'',priority:'med',due:''});
+  return React.createElement('div',{className:'modal-backdrop'},
+    React.createElement('div',{className:'modal'},
+      React.createElement('h3',null,'Add task'),
+      React.createElement('div',{className:'field'},React.createElement('label',null,'Task'),React.createElement('input',{value:v.text,onChange:e=>setV({...v,text:e.target.value}),autoFocus:true,onKeyDown:e=>e.key==='Enter'&&v.text&&onSave(v)})),
+      React.createElement('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}},
+        React.createElement('div',{className:'field'},React.createElement('label',null,'Priority'),React.createElement('select',{value:v.priority,onChange:e=>setV({...v,priority:e.target.value})},React.createElement('option',{value:'high'},'High'),React.createElement('option',{value:'med'},'Medium'),React.createElement('option',{value:'low'},'Low'))),
+        React.createElement('div',{className:'field'},React.createElement('label',null,'Due date'),React.createElement('input',{type:'date',value:v.due,onChange:e=>setV({...v,due:e.target.value})})),
+      ),
+      React.createElement('div',{className:'modal-actions'},
+        React.createElement('button',{className:'btn btn-ghost',onClick:onClose},'Cancel'),
+        React.createElement('button',{className:'btn btn-primary',onClick:()=>v.text&&onSave(v),disabled:!v.text},'Add task'),
+      ),
+    )
+  );
+}
+
+// ── HABITS VIEW ───────────────────────────────────────────────────────────
+function HabitsView({data,setData}){
+  const [modal,setModal]=useState(false);const [hv,setHv]=useState({name:'',area:'health'});
+  const [coachText,setCoachText]=useState('');const [coachLoading,setCoachLoading]=useState(false);
+  const days=weekDays(),todayIdx=new Date().getDay()===0?6:new Date().getDay()-1;
+  function toggle(hid,k){setData(d=>({...d,habits:d.habits.map(h=>h.id===hid?{...h,log:{...h.log,[k]:!h.log[k]}}:h)}))}
+  function addHabit(){if(!hv.name)return;setData(d=>({...d,habits:[...d.habits,{id:'h'+Date.now(),name:hv.name,color:hv.area,log:{}}]}));setModal(false);setHv({name:'',area:'health'});}
+  function deleteHabit(hid){setData(d=>({...d,habits:d.habits.filter(h=>h.id!==hid)}))}
+  async function getCoaching(){
+    setCoachLoading(true);
+    const s=data.habits.map(h=>{const done=weekDays().filter(d=>h.log[d.toISOString().slice(0,10)]).length;return `${h.name}: ${done}/7, streak ${calcStreak(h.log)}`;}).join('; ');
+    const reply=await askClaude(`Habit data: ${s}. Which needs most attention and why? One concrete scheduling fix.`);
+    setCoachText(reply);setCoachLoading(false);
+  }
+  return React.createElement('div',null,
+    React.createElement('div',{style:{display:'flex',gap:10,marginBottom:16}},
+      React.createElement('button',{className:'btn btn-primary',onClick:()=>setModal(true)},'+ New habit'),
+      React.createElement('button',{className:'btn btn-ghost',onClick:getCoaching,disabled:coachLoading},coachLoading?'Loading...':'⚡ Coach my habits'),
+    ),
+    coachText&&React.createElement('div',{className:'coach-box',style:{marginBottom:16}},React.createElement('div',{className:'coach-label'},'⚡ Habit Coach'),React.createElement('div',{className:'coach-text'},coachText)),
+    React.createElement('div',{className:'card'},
+      React.createElement('div',{style:{display:'flex',gap:10,marginBottom:14,paddingBottom:8,borderBottom:'1px solid var(--canvas2)'}},
+        React.createElement('div',{style:{width:140}}),
+        days.map((d,i)=>React.createElement('div',{key:i,style:{width:22,textAlign:'center',fontSize:10,fontWeight:i===todayIdx?700:400,color:i===todayIdx?'var(--accent)':'var(--ink3)',fontFamily:'var(--mono)'}},dayName(d).slice(0,1))),
+        React.createElement('div',{style:{width:60,fontSize:10,color:'var(--ink3)',marginLeft:4}},'streak'),
+      ),
+      data.habits.map(h=>{
+        const streak=calcStreak(h.log);
+        return React.createElement('div',{key:h.id,className:'habit-row'},
+          React.createElement('div',{className:'habit-name'},h.name),
+          React.createElement('div',{className:'habit-dots'},days.map((d,i)=>{
+            const k=d.toISOString().slice(0,10),done=!!h.log[k],isToday=i===todayIdx;
+            return React.createElement('div',{key:i,className:`habit-dot${done?' done':''}${isToday?' today':''}`,style:{background:done?areaHex(h.color):'var(--canvas2)',width:22,height:22,borderRadius:5,cursor:'pointer'},onClick:()=>toggle(h.id,k)});
+          })),
+          React.createElement('div',{style:{minWidth:50,fontSize:11,fontFamily:'var(--mono)',color:'var(--ink3)'}},streak>0?`🔥 ${streak}`:'—'),
+          React.createElement('button',{className:'btn btn-danger btn-sm',style:{padding:'2px 7px',fontSize:11},onClick:()=>deleteHabit(h.id)},'✕'),
+        );
+      }),
+      data.habits.length===0&&React.createElement('div',{className:'empty'},React.createElement('p',null,'No habits yet.')),
+    ),
+    modal&&React.createElement('div',{className:'modal-backdrop'},React.createElement('div',{className:'modal'},
+      React.createElement('h3',null,'New habit'),
+      React.createElement('div',{className:'field'},React.createElement('label',null,'Name'),React.createElement('input',{value:hv.name,onChange:e=>setHv({...hv,name:e.target.value}),autoFocus:true})),
+      React.createElement('div',{className:'field'},React.createElement('label',null,'Category'),React.createElement('select',{value:hv.area,onChange:e=>setHv({...hv,area:e.target.value})},Object.entries(AREA_LABELS).map(([k,l])=>React.createElement('option',{key:k,value:k},l)))),
+      React.createElement('div',{className:'modal-actions'},React.createElement('button',{className:'btn btn-ghost',onClick:()=>setModal(false)},'Cancel'),React.createElement('button',{className:'btn btn-primary',onClick:addHabit,disabled:!hv.name},'Add')),
+    )),
+  );
+}
+
+// ── SCHEDULE VIEW ─────────────────────────────────────────────────────────
+function ScheduleView({data,setData}){
+  const [modal,setModal]=useState(false);const [calModal,setCalModal]=useState(null);
+  const [v,setV]=useState({day:1,time:'07:00',duration:60,title:'',projectId:'',notes:''});
+  function addBlock(){setData(d=>({...d,schedule:[...d.schedule,{...v,id:'s'+Date.now(),day:parseInt(v.day),duration:parseInt(v.duration)}]}));setModal(false);}
+  function deleteBlock(sid){setData(d=>({...d,schedule:d.schedule.filter(s=>s.id!==sid)}))}
+  const byDay=Array.from({length:7},(_,i)=>({day:i,label:fullDayName(i),blocks:[...data.schedule.filter(s=>s.day===i)].sort((a,b)=>a.time.localeCompare(b.time))}));
+  return React.createElement('div',null,
+    React.createElement('div',{style:{display:'flex',gap:10,marginBottom:20,alignItems:'center'}},
+      React.createElement('button',{className:'btn btn-primary',onClick:()=>setModal(true)},'+ Add recurring block'),
+      React.createElement('span',{style:{fontSize:12,color:'var(--ink3)'}},'Click any block to push to Google Calendar'),
+    ),
+    byDay.map(({day,label,blocks})=>blocks.length===0?null:
+      React.createElement('div',{key:day,style:{marginBottom:20}},
+        React.createElement('div',{className:'sched-day-label'},label),
+        blocks.map(b=>{
+          const proj=b.projectId?data.projects.find(p=>p.id===b.projectId):null;
+          return React.createElement('div',{key:b.id,className:'sched-block',onClick:()=>setCalModal(b)},
+            React.createElement('div',{style:{fontSize:11,fontFamily:'var(--mono)',color:'var(--ink3)',minWidth:52,paddingTop:2}},b.time),
+            React.createElement('div',{style:{flex:1}},
+              React.createElement('div',{className:'sched-title'},b.title),
+              proj&&React.createElement('div',{className:'sched-proj'},proj.name),
+              b.notes&&React.createElement('div',{className:'sched-proj'},b.notes),
+            ),
+            React.createElement('div',{style:{display:'flex',alignItems:'center',gap:6}},
+              React.createElement('span',{style:{fontSize:11,fontFamily:'var(--mono)',color:'var(--ink3)'}},`${b.duration}m`),
+              React.createElement('span',{style:{fontSize:11,color:'#2e7d32',background:'#e8f5e9',padding:'2px 6px',borderRadius:8,fontWeight:600}},'📅'),
+              React.createElement('button',{className:'btn btn-danger btn-sm',style:{padding:'2px 6px',fontSize:11},onClick:e=>{e.stopPropagation();deleteBlock(b.id)}},'✕'),
+            ),
+          );
+        })
+      )
+    ),
+    modal&&React.createElement('div',{className:'modal-backdrop'},React.createElement('div',{className:'modal'},
+      React.createElement('h3',null,'Add recurring time block'),
+      React.createElement('div',{className:'field'},React.createElement('label',null,'Day'),React.createElement('select',{value:v.day,onChange:e=>setV({...v,day:e.target.value})},Array.from({length:7},(_,i)=>React.createElement('option',{key:i,value:i},fullDayName(i))))),
+      React.createElement('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}},
+        React.createElement('div',{className:'field'},React.createElement('label',null,'Start time'),React.createElement('input',{type:'time',value:v.time,onChange:e=>setV({...v,time:e.target.value})})),
+        React.createElement('div',{className:'field'},React.createElement('label',null,'Duration (min)'),React.createElement('input',{type:'number',value:v.duration,min:15,step:15,onChange:e=>setV({...v,duration:e.target.value})})),
+      ),
+      React.createElement('div',{className:'field'},React.createElement('label',null,'Title'),React.createElement('input',{value:v.title,onChange:e=>setV({...v,title:e.target.value}),autoFocus:true})),
+      React.createElement('div',{className:'field'},React.createElement('label',null,'Link to project'),React.createElement('select',{value:v.projectId,onChange:e=>setV({...v,projectId:e.target.value})},React.createElement('option',{value:''},'— None —'),data.projects.map(p=>React.createElement('option',{key:p.id,value:p.id},p.name)))),
+      React.createElement('div',{className:'field'},React.createElement('label',null,'Notes'),React.createElement('input',{value:v.notes,onChange:e=>setV({...v,notes:e.target.value})})),
+      React.createElement('div',{className:'modal-actions'},React.createElement('button',{className:'btn btn-ghost',onClick:()=>setModal(false)},'Cancel'),React.createElement('button',{className:'btn btn-primary',onClick:()=>v.title&&addBlock(),disabled:!v.title},'Add block')),
+    )),
+    calModal&&React.createElement(CalendarPushModal,{block:calModal,projects:data.projects,onClose:()=>setCalModal(null),onPushed:()=>setCalModal(null)}),
+  );
+}
+
+// ── WEEKLY REVIEW ─────────────────────────────────────────────────────────
+function WeeklyReview({data,setData}){
+  const [ratings,setRatings]=useState({energy:0,focus:0,progress:0,balance:0});
+  const [wins,setWins]=useState('');const [blockers,setBlockers]=useState('');const [nextFocus,setNextFocus]=useState('');
+  const [saved,setSaved]=useState(false);
+  const areaLabels={energy:'Energy & health',focus:'Focus & deep work',progress:'Project progress',balance:'Life balance'};
+  function setRating(area,val){setRatings(r=>({...r,[area]:val}))}
+  async function generateReview(){
+    setAiLoading(true);
+    const hs=data.habits.map(h=>{const done=weekDays().filter(d=>h.log[d.toISOString().slice(0,10)]).length;return `${h.name}: ${done}/7`;}).join(', ');
+    const cfaProj=data.projects.find(p=>p.id==='p1');
+    const cfaPct=cfaProj?.autoCalc?calcAutoPct(cfaProj.tasks):cfaProj?.pct||0;
+    const overdue=cfaProj?.tasks.filter(t=>!t.done&&t.due&&t.due<todayKey()).length||0;
+    const reply=await askClaude(`Weekly review. Ratings: ${Object.entries(ratings).map(([k,v])=>`${areaLabels[k]}: ${v}/5`).join(', ')}. Wins: ${wins||'none'}. Blockers: ${blockers||'none'}. Next focus: ${nextFocus||'none'}. Habits: ${hs}. CFA: ${cfaPct}%, ${overdue} overdue tasks. 3-4 sentence coaching summary: what the data says, one risk, one concrete change next week. Direct.`);
+    setAiReview(reply);setAiLoading(false);
+  }
+  function saveReview(){setData(d=>({...d,reviews:[{id:'r'+Date.now(),date:todayKey(),ratings,wins,blockers,nextFocus,aiReview},...d.reviews],lastReviewDate:todayKey()}));setSaved(true);}
+  return React.createElement('div',null,
+    data.lastReviewDate&&React.createElement('div',{style:{fontSize:12,color:'var(--ink3)',marginBottom:16,fontFamily:'var(--mono)'}},`Last review: ${data.lastReviewDate}`),
+    React.createElement('div',{className:'card'},
+      React.createElement('div',{className:'review-section'},
+        React.createElement('h3',null,'Rate your week'),
+        Object.keys(areaLabels).map(area=>React.createElement('div',{key:area,className:'rating-row'},
+          React.createElement('div',{className:'rating-label'},areaLabels[area]),
+          React.createElement('div',{className:'stars'},[1,2,3,4,5].map(n=>React.createElement('span',{key:n,className:`star${ratings[area]>=n?' on':''}`,onClick:()=>setRating(area,n)},'★'))),
+          React.createElement('span',{style:{fontSize:12,color:'var(--ink3)',marginLeft:4}},ratings[area]>0?`${ratings[area]}/5`:''),
+        )),
+      ),
+      React.createElement('div',{className:'review-section'},
+        React.createElement('h3',null,'This week'),
+        React.createElement('div',{className:'field'},React.createElement('label',null,'Wins & highlights'),React.createElement('textarea',{className:'review-input',value:wins,onChange:e=>setWins(e.target.value),placeholder:'What went well?'})),
+        React.createElement('div',{className:'field'},React.createElement('label',null,'Blockers & friction'),React.createElement('textarea',{className:'review-input',value:blockers,onChange:e=>setBlockers(e.target.value),placeholder:'What slowed you down?'})),
+        React.createElement('div',{className:'field'},React.createElement('label',null,'Next week top focus'),React.createElement('textarea',{className:'review-input',value:nextFocus,onChange:e=>setNextFocus(e.target.value),placeholder:'One thing that would make next week a success'})),
+      ),
+      React.createElement('div',{style:{display:'flex',gap:10,flexWrap:'wrap'}},
+        React.createElement('button',{className:'btn btn-primary',onClick:generateReview,disabled:aiLoading},aiLoading?'Generating...':'⚡ Get AI coaching review'),
+        !saved&&aiReview&&React.createElement('button',{className:'btn btn-ghost',onClick:saveReview},'Save this review'),
+        saved&&React.createElement('span',{style:{fontSize:13,color:'var(--green)'}},'✓ Saved'),
+      ),
+      aiReview&&React.createElement('div',{className:'coach-box',style:{marginTop:16}},React.createElement('div',{className:'coach-label'},'⚡ Week in review'),React.createElement('div',{className:'coach-text'},aiReview)),
+    ),
+    data.reviews.slice(0,5).length>0&&React.createElement('div',{className:'card',style:{marginTop:16}},
+      React.createElement('div',{className:'card-title'},'Past reviews'),
+      data.reviews.slice(0,5).map(r=>React.createElement('div',{key:r.id,style:{borderBottom:'1px solid var(--canvas2)',paddingBottom:14,marginBottom:14}},
+        React.createElement('div',{style:{display:'flex',alignItems:'center',gap:12,marginBottom:8}},
+          React.createElement('div',{style:{fontFamily:'var(--mono)',fontSize:12,color:'var(--ink3)'}},r.date),
+          Object.entries(r.ratings||{}).map(([k,v])=>v>0?React.createElement('span',{key:k,className:'tag'},`${k[0].toUpperCase()} ${v}★`):null),
+        ),
+        r.aiReview&&React.createElement('div',{style:{fontSize:13,color:'var(--ink2)',lineHeight:1.6}},r.aiReview),
+      )),
+    ),
+  );
+}
+
+
+// ── MOBILE APP SHELL ──────────────────────────────────────────────────────
+function CoachBox({data}){
+  const [text,setText]=useState('');const [loading,setLoading]=useState(false);
+  const chips=['Focus for today','CFA on track?','My blockers','Prioritize tasks'];
+  const ask=useCallback(async(q)=>{
+    setLoading(true);setText('');
+    const cfaProj=data.projects.find(p=>p.id==='p1');
+    const overdue=data.projects.flatMap(p=>p.tasks.filter(t=>!t.done&&t.due&&t.due<todayKey())).length;
+    const ctx=`Today: ${new Date().toDateString()}. CFA: ${calcAutoPct(cfaProj?.tasks||[])}%. Overdue tasks: ${overdue}. Habits today: ${data.habits.filter(h=>h.log[todayKey()]).length}/${data.habits.length} done.`;
+    const reply=await askClaude(`${ctx}\n\nQuestion: ${q}`);
+    setText(reply);setLoading(false);
+  },[data]);
+  useEffect(()=>{ask('One sentence: what is the single most important thing for me to do today?')},[]);
+  return React.createElement('div',{className:'coach-box'},
+    React.createElement('div',{className:'coach-label'},'⚡ Coach'),
+    loading
+      ? React.createElement('div',{style:{display:'flex',alignItems:'center',gap:8,opacity:.6}},React.createElement('div',{className:'spinner'}),' Thinking...')
+      : React.createElement('div',{className:'coach-text'},text),
+    React.createElement('div',{className:'coach-chips'},
+      chips.map(c=>React.createElement('button',{key:c,className:'coach-chip',onClick:()=>ask(c)},c))
+    )
+  );
+}
+
+function CalendarPushModal({block,projects,onClose}){
+  const [status,setStatus]=useState(null);const [msg,setMsg]=useState('');
+  const proj=block.projectId?projects.find(p=>p.id===block.projectId):null;
+  function nextOcc(dayNum,time){
+    const now=new Date(),diff=((dayNum-now.getDay())+7)%7||(now.getHours()>=parseInt(time)?7:0);
+    const d=new Date(now);d.setDate(now.getDate()+diff);
+    const [h,m]=time.split(':');d.setHours(parseInt(h),parseInt(m),0,0);return d;
+  }
+  async function push(){
+    setStatus('loading');
+    const s=nextOcc(block.day,block.time);
+    const e=new Date(s.getTime()+block.duration*60000);
+    try{
+      const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:300,
+          system:'Calendar assistant. Use Google Calendar MCP create_event. Reply: SUCCESS or ERROR: reason.',
+          messages:[{role:'user',content:`Create event: Title="${block.title}", Start="${s.toISOString()}", End="${e.toISOString()}", TimeZone="America/Chicago"${proj?`, Description="Project: ${proj.name}"`:''}.`}],
+          mcp_servers:[{type:'url',url:'https://calendarmcp.googleapis.com/mcp/v1',name:'google-calendar'}]
+        })});
+      const d=await res.json();const t=d.content?.map(c=>c.text||'').join('')||'';
+      if(t.includes('SUCCESS')||t.includes('created')||t.includes('event')){setStatus('success');setMsg('Added to calendar');}
+      else{setStatus('error');setMsg(t.slice(0,100));}
+    }catch(ex){setStatus('error');setMsg(ex.message);}
+  }
+  const s=nextOcc(block.day,block.time),e=new Date(s.getTime()+block.duration*60000);
+  return React.createElement('div',{className:'modal-overlay',onClick:e=>e.target===e.currentTarget&&onClose()},
+    React.createElement('div',{className:'modal-sheet'},
+      React.createElement('div',{className:'modal-handle'}),
+      React.createElement('div',{className:'modal-title'},'📅 Add to Calendar'),
+      React.createElement('div',{style:{background:'var(--canvas2)',borderRadius:'var(--r-sm)',padding:'12px',marginBottom:14}},
+        React.createElement('div',{style:{fontWeight:700,fontSize:15,color:'var(--ink)',marginBottom:2}},block.title),
+        React.createElement('div',{style:{fontSize:13,color:'var(--ink2)'}},`${fullDayName(block.day)} ${block.time} · ${block.duration} min`),
+        React.createElement('div',{style:{fontSize:12,color:'var(--ink3)',marginTop:3}},`Next: ${s.toLocaleDateString('en-US',{month:'short',day:'numeric'})} ${s.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})} – ${e.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}`),
+      ),
+      status&&React.createElement('div',{className:`cal-status ${status}`},status==='loading'?'Adding...':status==='success'?`✓ ${msg}`:`✗ ${msg}`),
+      React.createElement('div',{className:'modal-actions'},
+        React.createElement('button',{className:'btn btn-ghost',onClick:onClose},'Cancel'),
+        status!=='success'&&React.createElement('button',{className:'btn btn-cal',onClick:push,disabled:status==='loading',style:{flex:1,justifyContent:'center'}},status==='loading'?'Adding...':'Confirm'),
+      ),
+    )
+  );
+}
+
+// ── DASHBOARD TAB ─────────────────────────────────────────────────────────
+function DashboardTab({data,setData,setTab,setSelectedProject}){
+  const openCount=data.projects.flatMap(p=>p.tasks.filter(t=>!t.done)).length;
+  const overdueCount=data.projects.flatMap(p=>p.tasks.filter(t=>!t.done&&t.due&&t.due<todayKey())).length;
+  const doneToday=data.habits.filter(h=>h.log[todayKey()]).length;
+  const cfaProj=data.projects.find(p=>p.id==='p1');
+  const cfaPct=cfaProj?.autoCalc?calcAutoPct(cfaProj.tasks):cfaProj?.pct||0;
+  const todayCFA=cfaProj?.tasks.filter(t=>!t.done).sort((a,b)=>(a.due||'9999')>(b.due||'9999')?1:-1)[0];
+  const days=weekDays(),todayIdx=new Date().getDay()===0?6:new Date().getDay()-1;
+  function toggleHabit(hid){const k=todayKey();setData(d=>({...d,habits:d.habits.map(h=>h.id===hid?{...h,log:{...h.log,[k]:!h.log[k]}}:h)}))}
+  const urgent=data.projects.flatMap(p=>p.tasks.filter(t=>!t.done&&t.due&&t.due<=addDays(todayKey(),7)).map(t=>({...t,projName:p.name,color:p.color}))).sort((a,b)=>a.due>b.due?1:-1).slice(0,5);
+  return React.createElement('div',null,
+    React.createElement(CoachBox,{data}),
+    todayCFA&&React.createElement('div',{className:'today-banner',onClick:()=>{setSelectedProject('p1');setTab('projects')}},
+      React.createElement('div',{style:{fontSize:22}},'📖'),
+      React.createElement('div',{style:{flex:1,minWidth:0}},
+        React.createElement('div',{className:'today-banner-label'},"Today's CFA task"),
+        React.createElement('div',{className:'today-banner-text'},todayCFA.text),
+        todayCFA.due&&React.createElement('div',{style:{fontSize:11,color:'rgba(255,255,255,.5)',marginTop:2}},`Due ${formatDue(todayCFA.due)}`),
+      ),
+      React.createElement('div',{style:{fontSize:20,fontWeight:700,fontFamily:'var(--mono)',color:'var(--accent2)',flexShrink:0}},`${cfaPct}%`),
+    ),
+    React.createElement('div',{className:'stat-grid'},
+      React.createElement('div',{className:'stat-tile'},React.createElement('div',{className:'stat-num'},openCount),React.createElement('div',{className:'stat-label'},'Open')),
+      React.createElement('div',{className:'stat-tile'},React.createElement('div',{className:'stat-num',style:{color:overdueCount>0?'var(--red)':'var(--ink)'}},overdueCount),React.createElement('div',{className:'stat-label'},'Overdue')),
+      React.createElement('div',{className:'stat-tile'},React.createElement('div',{className:'stat-num',style:{color:doneToday===data.habits.length&&doneToday>0?'var(--green)':'var(--ink)'}},`${doneToday}/${data.habits.length}`),React.createElement('div',{className:'stat-label'},'Habits')),
+    ),
+    React.createElement('div',{className:'card'},
+      React.createElement('div',{className:'card-title'},"Habits today"),
+      data.habits.map(h=>{
+        const done=!!h.log[todayKey()],streak=calcStreak(h.log);
+        return React.createElement('div',{key:h.id,className:'habit-row'},
+          React.createElement('div',{className:'habit-name'},h.name),
+          React.createElement('div',{style:{display:'flex',alignItems:'center',gap:8}},
+            streak>0&&React.createElement('span',{style:{fontSize:11,fontFamily:'var(--mono)',color:'var(--ink3)'}},`🔥${streak}`),
+            React.createElement('div',{
+              style:{width:36,height:36,borderRadius:8,background:done?areaHex(h.color):'var(--canvas2)',border:done?'none':'1px solid var(--canvas3)',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',fontSize:18},
+              onClick:()=>toggleHabit(h.id)
+            },done?'✓':''),
+          ),
+        );
+      }),
+    ),
+    urgent.length>0&&React.createElement('div',{className:'card'},
+      React.createElement('div',{className:'card-title'},'Due this week'),
+      urgent.map(t=>{
+        const tag=dueDateTag(t.due);
+        return React.createElement('div',{key:t.id,className:'task-row'},
+          React.createElement('div',{className:'task-cb'}),
+          React.createElement('div',{style:{flex:1,minWidth:0}},
+            React.createElement('div',{className:'task-text'},t.text),
+            React.createElement('div',{className:'task-meta'},
+              tag&&React.createElement('span',{className:`tag ${tag}`},tag==='overdue'?'Overdue':tag==='due-today'?'Today':'Soon'),
+              React.createElement('span',{className:'tag'},formatDue(t.due)),
+              React.createElement('span',{className:'tag'},t.projName),
+            ),
+          ),
+        );
+      }),
+    ),
+    React.createElement('div',{className:'card'},
+      React.createElement('div',{className:'card-title'},'Projects'),
+      data.projects.map(p=>{
+        const pct=p.autoCalc?calcAutoPct(p.tasks):p.pct;
+        const overdue=p.tasks.filter(t=>!t.done&&t.due&&t.due<todayKey()).length;
+        return React.createElement('div',{key:p.id,className:'proj-row',onClick:()=>{setSelectedProject(p.id);setTab('projects')}},
+          React.createElement('div',{className:`proj-dot dot-${p.color}`}),
+          React.createElement('div',{style:{flex:1,minWidth:0}},
+            React.createElement('div',{className:'proj-name'},p.name),
+            React.createElement('div',{className:'proj-sub'},overdue>0?`${overdue} overdue`:`${p.tasks.filter(t=>!t.done).length} open tasks`),
+            React.createElement('div',{className:'prog-bar',style:{marginTop:5}},React.createElement('div',{className:`prog-fill fill-${p.color}`,style:{width:`${pct}%`}})),
+          ),
+          React.createElement('div',{style:{fontSize:16,fontWeight:700,fontFamily:'var(--mono)',color:areaHex(p.color),flexShrink:0,marginLeft:8}},`${pct}%`),
+        );
+      }),
+    ),
+  );
+}
+
+// ── PROJECTS TAB ──────────────────────────────────────────────────────────
+function ProjectsTab({data,setData,selectedProject,setSelectedProject}){
+  const [modal,setModal]=useState(false);const [taskModal,setTaskModal]=useState(null);
+  const [bulkSelected,setBulkSelected]=useState([]);const [bulkAction,setBulkAction]=useState('');
+  const [dragId,setDragId]=useState(null);const [dragOverId,setDragOverId]=useState(null);
+  const [editingTask,setEditingTask]=useState(null);const [phaseFilter,setPhaseFilter]=useState('open');
+  const [coaching,setCoaching]=useState({});const [coachLoading,setCoachLoading]=useState({});
+
+  const proj=selectedProject?data.projects.find(p=>p.id===selectedProject):null;
+
+  function applyBulk(){
+    if(!bulkAction||!bulkSelected.length)return;
+    setData(d=>({...d,projects:d.projects.map(p=>{
+      if(p.id!==proj.id)return p;
+      const tasks=p.tasks.map(t=>{
+        if(!bulkSelected.includes(t.id))return t;
+        if(bulkAction==='done')return{...t,done:true};
+        if(bulkAction==='undone')return{...t,done:false};
+        if(bulkAction==='delete')return null;
+        if(['high','med','low'].includes(bulkAction))return{...t,priority:bulkAction};
+        return t;
+      }).filter(Boolean);
+      return {...p,tasks,pct:p.autoCalc?calcAutoPct(tasks):p.pct};
+    })}));
+    setBulkSelected([]);setBulkAction('');
+  }
+
+  function handleDragStart(e,pid){setDragId(pid);}
+  function handleDragOver(e,pid){e.preventDefault();setDragOverId(pid);}
+  function handleDrop(e,targetPid){
+    e.preventDefault();
+    if(!dragId||dragId===targetPid){setDragId(null);setDragOverId(null);return;}
+    setData(d=>{
+      const dragP=d.projects.find(p=>p.id===dragId),targetP=d.projects.find(p=>p.id===targetPid);
+      if(!dragP||!targetP||dragP.area!==targetP.area){setDragId(null);setDragOverId(null);return d;}
+      const areaPs=[...d.projects.filter(p=>p.area===dragP.area)].sort((a,b)=>(a.priority||0)-(b.priority||0));
+      const di=areaPs.findIndex(p=>p.id===dragId),ti=areaPs.findIndex(p=>p.id===targetPid);
+      areaPs.splice(di,1);areaPs.splice(ti,0,dragP);
+      const up={};areaPs.forEach((p,i)=>up[p.id]=i);
+      return {...d,projects:d.projects.map(p=>up[p.id]!==undefined?{...p,priority:up[p.id]}:p)};
+    });
+    setDragId(null);setDragOverId(null);
+  }
+
+  function toggleTask(pid,tid){
+    setData(d=>({...d,projects:d.projects.map(p=>{
+      if(p.id!==pid)return p;
+      const tasks=p.tasks.map(t=>t.id===tid?{...t,done:!t.done}:t);
+      return{...p,tasks,pct:p.autoCalc?calcAutoPct(tasks):p.pct};
+    })}));
+  }
+  function addTask(pid,v){
+    setData(d=>({...d,projects:d.projects.map(p=>p.id===pid?{...p,tasks:[...p.tasks,{id:'t'+Date.now(),text:v.text,done:false,priority:v.priority||'med',due:v.due||null,phase:null}]}:p)}));
+    setTaskModal(null);
+  }
+  function saveEdit(){
+    if(!editingTask)return;
+    setData(d=>({...d,projects:d.projects.map(p=>p.id===editingTask.pid?{...p,tasks:p.tasks.map(t=>t.id===editingTask.tid?{...t,text:editingTask.text,priority:editingTask.priority,due:editingTask.due||null}:t)}:p)}));
+    setEditingTask(null);
+  }
+  function deleteTask(pid,tid){setData(d=>({...d,projects:d.projects.map(p=>p.id===pid?{...p,tasks:p.tasks.filter(t=>t.id!==tid)}:p)}))}
+  function addProject(v){
+    setData(d=>({...d,projects:[...d.projects,{id:'p'+Date.now(),name:v.name,area:v.area,color:v.area,pct:0,autoCalc:false,notes:v.notes||'',priority:d.projects.filter(p=>p.area===v.area).length,tasks:[]}]}));
+    setModal(false);
+  }
+
+  async function getCoaching(p){
+    setCoachLoading(c=>({...c,[p.id]:true}));
+    const pct=p.autoCalc?calcAutoPct(p.tasks):p.pct;
+    const overdue=p.tasks.filter(t=>!t.done&&t.due&&t.due<todayKey()).length;
+    const reply=await askClaude(`Project: "${p.name}". Progress: ${pct}%. Overdue: ${overdue}. Open: ${p.tasks.filter(t=>!t.done).length}. Notes: ${p.notes}. 2 coaching points: biggest risk, single most important next action.`);
+    setCoaching(c=>({...c,[p.id]:reply}));setCoachLoading(c=>({...c,[p.id]:false}));
+  }
+
+  // DETAIL
+  if(proj){
+    const pct=proj.autoCalc?calcAutoPct(proj.tasks):proj.pct;
+    const isCFA=proj.id==='p1';
+    let display=proj.tasks;
+    if(phaseFilter==='open')display=proj.tasks.filter(t=>!t.done);
+    else if(phaseFilter==='overdue')display=proj.tasks.filter(t=>!t.done&&t.due&&t.due<todayKey());
+    else if(['1','2','3','4'].includes(phaseFilter))display=proj.tasks.filter(t=>String(t.phase)===phaseFilter);
+    const openD=display.filter(t=>!t.done),doneD=display.filter(t=>t.done);
+    const allSel=bulkSelected.length>0&&bulkSelected.length===openD.length;
+
+    return React.createElement('div',null,
+      React.createElement('button',{className:'btn btn-ghost btn-sm',style:{marginBottom:14},onClick:()=>{setSelectedProject(null);setBulkSelected([]);setPhaseFilter('open')}},
+        '← Projects'),
+      React.createElement('div',{className:'card'},
+        React.createElement('div',{style:{display:'flex',alignItems:'center',gap:10,marginBottom:10}},
+          React.createElement('div',{className:`proj-dot dot-${proj.color}`,style:{width:12,height:12}}),
+          React.createElement('div',{style:{flex:1,fontWeight:700,fontSize:16,color:'var(--ink)'}},proj.name),
+          React.createElement('div',{className:'auto-badge',style:{cursor:'pointer'},onClick:()=>setData(d=>({...d,projects:d.projects.map(p=>p.id===proj.id?{...p,autoCalc:!p.autoCalc}:p)}))},proj.autoCalc?'Auto':'Manual'),
+        ),
+        !proj.autoCalc&&React.createElement('input',{type:'range',min:0,max:100,value:proj.pct,style:{width:'100%',marginBottom:4},onChange:e=>setData(d=>({...d,projects:d.projects.map(p=>p.id===proj.id?{...p,pct:parseInt(e.target.value)}:p)}))}),
+        React.createElement('div',{className:'prog-bar',style:{height:8,marginBottom:6}},React.createElement('div',{className:`prog-fill fill-${proj.color}`,style:{width:`${pct}%`}})),
+        React.createElement('div',{style:{display:'flex',justifyContent:'space-between',fontSize:12,color:'var(--ink3)'}},
+          React.createElement('span',null,proj.autoCalc?`${proj.tasks.filter(t=>t.done).length}/${proj.tasks.length} tasks done`:'Drag slider to update'),
+          React.createElement('span',{style:{fontWeight:700,fontFamily:'var(--mono)',color:areaHex(proj.color)}},`${pct}%`),
+        ),
+        proj.notes&&React.createElement('div',{style:{fontSize:13,color:'var(--ink3)',marginTop:8,borderTop:'1px solid var(--canvas2)',paddingTop:8}},proj.notes),
+      ),
+      coaching[proj.id]&&React.createElement('div',{className:'coach-box',style:{marginBottom:12}},React.createElement('div',{className:'coach-label'},'⚡ Project Coach'),React.createElement('div',{className:'coach-text'},coaching[proj.id])),
+      !coaching[proj.id]&&React.createElement('button',{className:'btn btn-ghost btn-full',style:{marginBottom:12},onClick:()=>getCoaching(proj),disabled:coachLoading[proj.id]},coachLoading[proj.id]?'Loading...':'⚡ Get project coaching'),
+      React.createElement('div',{className:'card'},
+        React.createElement('div',{style:{display:'flex',alignItems:'center',gap:8,marginBottom:10,flexWrap:'wrap'}},
+          React.createElement('div',{className:'card-title',style:{marginBottom:0,flex:1}},'Tasks'),
+          isCFA&&React.createElement('select',{value:phaseFilter,onChange:e=>setPhaseFilter(e.target.value),style:{fontSize:12,border:'1px solid var(--canvas3)',borderRadius:6,padding:'4px 8px',color:'var(--ink)',background:'#fff'}},
+            React.createElement('option',{value:'open'},'Open'),
+            React.createElement('option',{value:'all'},'All'),
+            React.createElement('option',{value:'overdue'},'Overdue'),
+            React.createElement('option',{value:'1'},'P1 Prereqs'),
+            React.createElement('option',{value:'2'},'P2 Core'),
+            React.createElement('option',{value:'3'},'P3 Mock'),
+            React.createElement('option',{value:'4'},'P4 Review'),
+          ),
+        ),
+        React.createElement('div',{style:{display:'flex',gap:8,marginBottom:10}},
+          React.createElement('button',{className:'btn btn-ghost btn-sm',onClick:()=>{const ids=openD.map(t=>t.id);setBulkSelected(s=>s.length===ids.length?[]:ids)}},allSel?'Deselect all':'Select all'),
+          React.createElement('button',{className:'btn btn-primary btn-sm',onClick:()=>setTaskModal(proj.id)},'+ Task'),
+        ),
+        bulkSelected.length>0&&React.createElement('div',{className:'bulk-bar'},
+          React.createElement('span',null,`${bulkSelected.length} selected`),
+          React.createElement('select',{value:bulkAction,onChange:e=>setBulkAction(e.target.value)},
+            React.createElement('option',{value:''},'Action…'),
+            React.createElement('option',{value:'done'},'Mark done'),
+            React.createElement('option',{value:'undone'},'Mark open'),
+            React.createElement('option',{value:'high'},'→ High'),
+            React.createElement('option',{value:'med'},'→ Med'),
+            React.createElement('option',{value:'low'},'→ Low'),
+            React.createElement('option',{value:'delete'},'Delete'),
+          ),
+          React.createElement('button',{className:'btn btn-primary btn-sm',onClick:applyBulk,disabled:!bulkAction},'Apply'),
+        ),
+        openD.length===0&&doneD.length===0&&React.createElement('div',{className:'empty'},React.createElement('p',null,'No tasks in this view.')),
+        openD.map(t=>{
+          const isEdit=editingTask?.tid===t.id;const tag=dueDateTag(t.due);
+          return React.createElement('div',{key:t.id,className:'task-row'},
+            React.createElement('input',{type:'checkbox',className:'checkbox-input',checked:bulkSelected.includes(t.id),onChange:()=>setBulkSelected(s=>s.includes(t.id)?s.filter(x=>x!==t.id):[...s,t.id])}),
+            React.createElement('div',{className:'task-cb',onClick:()=>toggleTask(proj.id,t.id)}),
+            React.createElement('div',{style:{flex:1,minWidth:0}},
+              isEdit
+                ? React.createElement('div',{style:{display:'flex',flexDirection:'column',gap:6}},
+                    React.createElement('input',{style:{border:'1px solid var(--accent)',borderRadius:6,padding:'6px 10px',fontSize:14,fontFamily:'var(--sans)',width:'100%'},value:editingTask.text,onChange:e=>setEditingTask({...editingTask,text:e.target.value}),autoFocus:true}),
+                    React.createElement('div',{style:{display:'flex',gap:6}},
+                      React.createElement('select',{value:editingTask.priority,onChange:e=>setEditingTask({...editingTask,priority:e.target.value}),style:{flex:1,fontSize:13,border:'1px solid var(--canvas3)',borderRadius:6,padding:'5px 8px'}},
+                        React.createElement('option',{value:'high'},'High'),React.createElement('option',{value:'med'},'Med'),React.createElement('option',{value:'low'},'Low'),
+                      ),
+                      React.createElement('input',{type:'date',value:editingTask.due||'',onChange:e=>setEditingTask({...editingTask,due:e.target.value}),style:{flex:1,fontSize:13,border:'1px solid var(--canvas3)',borderRadius:6,padding:'5px 8px'}}),
+                    ),
+                    React.createElement('div',{style:{display:'flex',gap:6}},
+                      React.createElement('button',{className:'btn btn-primary btn-sm',style:{flex:1,justifyContent:'center'},onClick:saveEdit},'Save'),
+                      React.createElement('button',{className:'btn btn-ghost btn-sm',style:{flex:1,justifyContent:'center'},onClick:()=>setEditingTask(null)},'Cancel'),
+                    ),
+                  )
+                : React.createElement('div',null,
+                    React.createElement('div',{className:'task-text'},t.text),
+                    React.createElement('div',{className:'task-meta'},
+                      t.phase&&React.createElement('span',{className:`phase-badge phase-${t.phase}`},`P${t.phase}`),
+                      tag&&React.createElement('span',{className:`tag ${tag}`},tag==='overdue'?'Overdue':tag==='due-today'?'Today':'Soon'),
+                      t.due&&React.createElement('span',{className:'tag'},formatDue(t.due)),
+                      React.createElement('span',{className:`tag ${t.priority}`},t.priority),
+                      React.createElement('button',{className:'btn btn-ghost btn-sm',style:{padding:'2px 8px',fontSize:11},onClick:()=>setEditingTask({pid:proj.id,tid:t.id,text:t.text,priority:t.priority,due:t.due||''})},'edit'),
+                      React.createElement('button',{className:'btn btn-danger btn-sm',style:{padding:'2px 8px',fontSize:11},onClick:()=>deleteTask(proj.id,t.id)},'✕'),
+                    ),
+                  ),
+            ),
+          );
+        }),
+        doneD.length>0&&React.createElement('div',{style:{marginTop:10,borderTop:'1px solid var(--canvas2)',paddingTop:10}},
+          React.createElement('div',{style:{fontSize:11,color:'var(--ink3)',marginBottom:8}},`${doneD.length} completed`),
+          doneD.slice(0,8).map(t=>React.createElement('div',{key:t.id,className:'task-row'},
+            React.createElement('div',{className:'task-cb done'}),
+            React.createElement('div',{className:'task-text done',style:{flex:1}},t.text),
+            React.createElement('button',{className:'btn btn-ghost btn-sm',style:{padding:'2px 8px',fontSize:11},onClick:()=>toggleTask(proj.id,t.id)},'undo'),
+          )),
+        ),
+      ),
+      React.createElement('button',{className:'btn btn-danger btn-full',style:{marginTop:4},onClick:()=>window.confirm('Delete this project?')&&(setSelectedProject(null),setData(d=>({...d,projects:d.projects.filter(p=>p.id!==proj.id)})))},'Delete project'),
+      taskModal&&React.createElement(TaskModalSheet,{onSave:v=>addTask(taskModal,v),onClose:()=>setTaskModal(null)}),
+      editingTask&&React.createElement('div',null),
+    );
+  }
+
+  // LIST
+  return React.createElement('div',null,
+    React.createElement('button',{className:'btn btn-primary btn-full',style:{marginBottom:16},onClick:()=>setModal(true)},'+ New project'),
+    React.createElement('div',{style:{fontSize:12,color:'var(--ink3)',marginBottom:10}},'☰ Drag within an area to reorder priority'),
+    Object.keys(AREA_LABELS).map(area=>{
+      const ps=[...data.projects.filter(p=>p.area===area)].sort((a,b)=>(a.priority||0)-(b.priority||0));
+      if(!ps.length)return null;
+      return React.createElement('div',{key:area,className:'area-section'},
+        React.createElement('div',{className:'area-header'},
+          React.createElement('div',{style:{width:8,height:8,borderRadius:'50%',background:areaHex(area)}}),
+          React.createElement('div',{style:{fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'.7px',color:'var(--ink3)'}},AREA_LABELS[area]),
+        ),
+        ps.map((p,i)=>{
+          const pct=p.autoCalc?calcAutoPct(p.tasks):p.pct;
+          const overdue=p.tasks.filter(t=>!t.done&&t.due&&t.due<todayKey()).length;
+          return React.createElement('div',{
+            key:p.id,className:`proj-card${dragId===p.id?' dragging':''}${dragOverId===p.id&&dragId!==p.id?' drag-over':''}`,
+            draggable:true,onDragStart:e=>handleDragStart(e,p.id),onDragOver:e=>handleDragOver(e,p.id),
+            onDrop:e=>handleDrop(e,p.id),onDragEnd:()=>{setDragId(null);setDragOverId(null);},
+            onClick:()=>setSelectedProject(p.id),
+          },
+            React.createElement('div',{className:'rank-badge'},`#${i+1}`),
+            React.createElement('div',{style:{display:'flex',alignItems:'center',gap:8,marginBottom:8}},
+              React.createElement('div',{className:`proj-dot dot-${p.color}`,style:{width:10,height:10}}),
+              React.createElement('div',{style:{fontWeight:700,fontSize:14,color:'var(--ink)',flex:1}},p.name),
+              p.autoCalc&&React.createElement('span',{className:'auto-badge'},'Auto'),
+              React.createElement('div',{style:{fontSize:18,fontWeight:700,fontFamily:'var(--mono)',color:areaHex(p.color)}},`${pct}%`),
+            ),
+            React.createElement('div',{className:'prog-bar',style:{marginBottom:5}},React.createElement('div',{className:`prog-fill fill-${p.color}`,style:{width:`${pct}%`}})),
+            React.createElement('div',{style:{display:'flex',justifyContent:'space-between',fontSize:11,color:overdue>0?'var(--red)':'var(--ink3)'}},
+              React.createElement('span',null,overdue>0?`${overdue} overdue`:`${p.tasks.filter(t=>!t.done).length} open`),
+              React.createElement('span',null,p.notes?.slice(0,35)||''),
+            ),
+          );
+        })
+      );
+    }),
+    modal&&React.createElement(ProjectModalSheet,{onSave:addProject,onClose:()=>setModal(false)}),
+  );
+}
+
+function ProjectModalSheet({onSave,onClose}){
+  const [v,setV]=useState({name:'',area:'career',notes:''});
+  return React.createElement('div',{className:'modal-overlay',onClick:e=>e.target===e.currentTarget&&onClose()},
+    React.createElement('div',{className:'modal-sheet'},
+      React.createElement('div',{className:'modal-handle'}),
+      React.createElement('div',{className:'modal-title'},'New project'),
+      React.createElement('div',{className:'field'},React.createElement('label',null,'Name'),React.createElement('input',{value:v.name,onChange:e=>setV({...v,name:e.target.value}),autoFocus:true,placeholder:'Project name'})),
+      React.createElement('div',{className:'field'},React.createElement('label',null,'Area'),React.createElement('select',{value:v.area,onChange:e=>setV({...v,area:e.target.value})},Object.entries(AREA_LABELS).map(([k,l])=>React.createElement('option',{key:k,value:k},l)))),
+      React.createElement('div',{className:'field'},React.createElement('label',null,'Notes'),React.createElement('textarea',{className:'input',value:v.notes,onChange:e=>setV({...v,notes:e.target.value}),placeholder:'Context, goal...'})),
+      React.createElement('div',{className:'modal-actions'},
+        React.createElement('button',{className:'btn btn-ghost',onClick:onClose},'Cancel'),
+        React.createElement('button',{className:'btn btn-primary',onClick:()=>v.name&&onSave(v),disabled:!v.name,style:{flex:1,justifyContent:'center'}},'Create'),
+      ),
+    )
+  );
+}
+function TaskModalSheet({onSave,onClose}){
+  const [v,setV]=useState({text:'',priority:'med',due:''});
+  return React.createElement('div',{className:'modal-overlay',onClick:e=>e.target===e.currentTarget&&onClose()},
+    React.createElement('div',{className:'modal-sheet'},
+      React.createElement('div',{className:'modal-handle'}),
+      React.createElement('div',{className:'modal-title'},'Add task'),
+      React.createElement('div',{className:'field'},React.createElement('label',null,'Task'),React.createElement('input',{value:v.text,onChange:e=>setV({...v,text:e.target.value}),autoFocus:true,placeholder:'What needs to happen?'})),
+      React.createElement('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}},
+        React.createElement('div',{className:'field'},React.createElement('label',null,'Priority'),React.createElement('select',{value:v.priority,onChange:e=>setV({...v,priority:e.target.value})},React.createElement('option',{value:'high'},'High'),React.createElement('option',{value:'med'},'Medium'),React.createElement('option',{value:'low'},'Low'))),
+        React.createElement('div',{className:'field'},React.createElement('label',null,'Due date'),React.createElement('input',{type:'date',value:v.due,onChange:e=>setV({...v,due:e.target.value})})),
+      ),
+      React.createElement('div',{className:'modal-actions'},
+        React.createElement('button',{className:'btn btn-ghost',onClick:onClose},'Cancel'),
+        React.createElement('button',{className:'btn btn-primary',onClick:()=>v.text&&onSave(v),disabled:!v.text,style:{flex:1,justifyContent:'center'}},'Add task'),
+      ),
+    )
+  );
+}
+
+// ── HABITS TAB ────────────────────────────────────────────────────────────
+function HabitsTab({data,setData}){
+  const [modal,setModal]=useState(false);const [hv,setHv]=useState({name:'',area:'health'});
+  const [coachText,setCoachText]=useState('');const [coachLoading,setCoachLoading]=useState(false);
+  const days=weekDays(),todayIdx=new Date().getDay()===0?6:new Date().getDay()-1;
+  function toggle(hid,k){setData(d=>({...d,habits:d.habits.map(h=>h.id===hid?{...h,log:{...h.log,[k]:!h.log[k]}}:h)}))}
+  async function getCoaching(){
+    setCoachLoading(true);
+    const s=data.habits.map(h=>{const done=weekDays().filter(d=>h.log[d.toISOString().slice(0,10)]).length;return `${h.name}: ${done}/7, streak ${calcStreak(h.log)}`;}).join('; ');
+    setCoachText(await askClaude(`Habit data: ${s}. Which habit needs most attention and why? One specific scheduling fix.`));
+    setCoachLoading(false);
+  }
+  return React.createElement('div',null,
+    React.createElement('div',{style:{display:'flex',gap:8,marginBottom:12}},
+      React.createElement('button',{className:'btn btn-primary',style:{flex:1,justifyContent:'center'},onClick:()=>setModal(true)},'+ New habit'),
+      React.createElement('button',{className:'btn btn-ghost',onClick:getCoaching,disabled:coachLoading},coachLoading?'…':'⚡'),
+    ),
+    coachText&&React.createElement('div',{className:'coach-box',style:{marginBottom:12}},React.createElement('div',{className:'coach-label'},'⚡ Habit Coach'),React.createElement('div',{className:'coach-text'},coachText)),
+    React.createElement('div',{className:'card'},
+      React.createElement('div',{style:{display:'flex',gap:4,marginBottom:10,paddingBottom:8,borderBottom:'1px solid var(--canvas2)',paddingLeft:0}},
+        React.createElement('div',{style:{flex:1}}),
+        days.map((d,i)=>React.createElement('div',{key:i,style:{width:26,textAlign:'center',fontSize:10,fontWeight:i===todayIdx?700:400,color:i===todayIdx?'var(--accent)':'var(--ink3)',fontFamily:'var(--mono)'}},dayName(d).slice(0,1))),
+        React.createElement('div',{style:{width:36}}),
+      ),
+      data.habits.map(h=>{
+        const streak=calcStreak(h.log);
+        return React.createElement('div',{key:h.id,className:'habit-row'},
+          React.createElement('div',{className:'habit-name'},h.name),
+          React.createElement('div',{className:'habit-dots'},
+            days.map((d,i)=>{
+              const k=d.toISOString().slice(0,10),done=!!h.log[k],isToday=i===todayIdx;
+              return React.createElement('div',{key:i,className:`habit-dot${done?' done':''}${isToday?' today':''}`,style:{background:done?areaHex(h.color):'var(--canvas2)',width:26,height:26,borderRadius:6,cursor:'pointer'},onClick:()=>toggle(h.id,k)});
+            })
+          ),
+          React.createElement('div',{className:'streak-text'},streak>0?`🔥${streak}`:'—'),
+        );
+      }),
+      data.habits.length===0&&React.createElement('div',{className:'empty'},React.createElement('p',null,'No habits yet.')),
+    ),
+    modal&&React.createElement('div',{className:'modal-overlay',onClick:e=>e.target===e.currentTarget&&setModal(false)},
+      React.createElement('div',{className:'modal-sheet'},
+        React.createElement('div',{className:'modal-handle'}),
+        React.createElement('div',{className:'modal-title'},'New habit'),
+        React.createElement('div',{className:'field'},React.createElement('label',null,'Habit'),React.createElement('input',{value:hv.name,onChange:e=>setHv({...hv,name:e.target.value}),autoFocus:true,placeholder:'e.g. Morning workout'})),
+        React.createElement('div',{className:'field'},React.createElement('label',null,'Category'),React.createElement('select',{value:hv.area,onChange:e=>setHv({...hv,area:e.target.value})},Object.entries(AREA_LABELS).map(([k,l])=>React.createElement('option',{key:k,value:k},l)))),
+        React.createElement('div',{className:'modal-actions'},
+          React.createElement('button',{className:'btn btn-ghost',onClick:()=>setModal(false)},'Cancel'),
+          React.createElement('button',{className:'btn btn-primary',onClick:()=>hv.name&&(setData(d=>({...d,habits:[...d.habits,{id:'h'+Date.now(),name:hv.name,color:hv.area,log:{}}]})),setModal(false),setHv({name:'',area:'health'})),disabled:!hv.name,style:{flex:1,justifyContent:'center'}},'Add'),
+        ),
+      )
+    ),
+  );
+}
+
+// ── SCHEDULE TAB ──────────────────────────────────────────────────────────
+function ScheduleTab({data,setData}){
+  const [modal,setModal]=useState(false);const [calModal,setCalModal]=useState(null);
+  const [v,setV]=useState({day:1,time:'07:00',duration:60,title:'',projectId:'',notes:''});
+  function addBlock(){setData(d=>({...d,schedule:[...d.schedule,{...v,id:'s'+Date.now(),day:parseInt(v.day),duration:parseInt(v.duration)}]}));setModal(false);}
+  function deleteBlock(sid){setData(d=>({...d,schedule:d.schedule.filter(s=>s.id!==sid)}))}
+  const byDay=Array.from({length:7},(_,i)=>({day:i,label:fullDayName(i),blocks:[...data.schedule.filter(s=>s.day===i)].sort((a,b)=>a.time.localeCompare(b.time))}));
+  return React.createElement('div',null,
+    React.createElement('button',{className:'btn btn-primary btn-full',style:{marginBottom:14},onClick:()=>setModal(true)},'+ Add recurring block'),
+    React.createElement('div',{style:{fontSize:12,color:'var(--ink3)',marginBottom:12}},'Tap any block to add to Google Calendar'),
+    byDay.map(({day,label,blocks})=>blocks.length===0?null:
+      React.createElement('div',{key:day,style:{marginBottom:16}},
+        React.createElement('div',{style:{fontSize:12,fontWeight:700,textTransform:'uppercase',letterSpacing:'.7px',color:'var(--ink3)',marginBottom:6,fontFamily:'var(--mono)'}},label),
+        blocks.map(b=>{
+          const proj=b.projectId?data.projects.find(p=>p.id===b.projectId):null;
+          return React.createElement('div',{key:b.id,className:'sched-block',onClick:()=>setCalModal(b)},
+            React.createElement('div',{className:'sched-time'},b.time),
+            React.createElement('div',{className:'sched-info'},
+              React.createElement('div',{className:'sched-title'},b.title),
+              (proj||b.notes)&&React.createElement('div',{className:'sched-sub'},proj?proj.name:b.notes),
+            ),
+            React.createElement('div',{style:{display:'flex',alignItems:'center',gap:6}},
+              React.createElement('span',{style:{fontSize:11,fontFamily:'var(--mono)',color:'var(--ink3)'}},`${b.duration}m`),
+              React.createElement('span',{style:{fontSize:14}},'📅'),
+              React.createElement('button',{className:'btn btn-danger btn-sm',style:{padding:'3px 8px',fontSize:11},onClick:e=>{e.stopPropagation();deleteBlock(b.id)}},'✕'),
+            ),
+          );
+        })
+      )
+    ),
+    modal&&React.createElement('div',{className:'modal-overlay',onClick:e=>e.target===e.currentTarget&&setModal(false)},
+      React.createElement('div',{className:'modal-sheet'},
+        React.createElement('div',{className:'modal-handle'}),
+        React.createElement('div',{className:'modal-title'},'Add recurring block'),
+        React.createElement('div',{className:'field'},React.createElement('label',null,'Day'),React.createElement('select',{value:v.day,onChange:e=>setV({...v,day:e.target.value})},Array.from({length:7},(_,i)=>React.createElement('option',{key:i,value:i},fullDayName(i))))),
+        React.createElement('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}},
+          React.createElement('div',{className:'field'},React.createElement('label',null,'Start'),React.createElement('input',{type:'time',value:v.time,onChange:e=>setV({...v,time:e.target.value})})),
+          React.createElement('div',{className:'field'},React.createElement('label',null,'Duration (min)'),React.createElement('input',{type:'number',value:v.duration,min:15,step:15,onChange:e=>setV({...v,duration:e.target.value})})),
+        ),
+        React.createElement('div',{className:'field'},React.createElement('label',null,'Title'),React.createElement('input',{value:v.title,onChange:e=>setV({...v,title:e.target.value}),autoFocus:true,placeholder:'Block name'})),
+        React.createElement('div',{className:'field'},React.createElement('label',null,'Project'),React.createElement('select',{value:v.projectId,onChange:e=>setV({...v,projectId:e.target.value})},React.createElement('option',{value:''},'— None —'),data.projects.map(p=>React.createElement('option',{key:p.id,value:p.id},p.name)))),
+        React.createElement('div',{className:'modal-actions'},React.createElement('button',{className:'btn btn-ghost',onClick:()=>setModal(false)},'Cancel'),React.createElement('button',{className:'btn btn-primary',onClick:()=>v.title&&addBlock(),disabled:!v.title,style:{flex:1,justifyContent:'center'}},'Add')),
+      )
+    ),
+    calModal&&React.createElement(CalendarPushModal,{block:calModal,projects:data.projects,onClose:()=>setCalModal(null)}),
+  );
+}
+
+// ── REVIEW TAB ────────────────────────────────────────────────────────────
+function ReviewTab({data,setData}){
+  const [ratings,setRatings]=useState({energy:0,focus:0,progress:0,balance:0});
+  const [wins,setWins]=useState('');const [blockers,setBlockers]=useState('');const [nextFocus,setNextFocus]=useState('');
+  const [aiReview,setAiReview]=useState('');const [aiLoading,setAiLoading]=useState(false);const [saved,setSaved]=useState(false);
+  const areaLabels={energy:'Energy & health',focus:'Focus & deep work',progress:'Project progress',balance:'Life balance'};
+  async function generateReview(){
+    setAiLoading(true);
+    const hs=data.habits.map(h=>{const done=weekDays().filter(d=>h.log[d.toISOString().slice(0,10)]).length;return `${h.name}: ${done}/7`;}).join(', ');
+    const cfaProj=data.projects.find(p=>p.id==='p1');
+    const cfaPct=cfaProj?.autoCalc?calcAutoPct(cfaProj.tasks):cfaProj?.pct||0;
+    const overdue=cfaProj?.tasks.filter(t=>!t.done&&t.due&&t.due<todayKey()).length||0;
+    const reply=await askClaude(`Weekly review. Ratings: ${Object.entries(ratings).map(([k,v])=>`${areaLabels[k]}: ${v}/5`).join(', ')}. Wins: ${wins||'none'}. Blockers: ${blockers||'none'}. Next focus: ${nextFocus||'none'}. Habits: ${hs}. CFA: ${cfaPct}%, ${overdue} overdue. 3-4 sentence summary: what the data says, one risk, one concrete change.`);
+    setAiReview(reply);setAiLoading(false);
+  }
+  function save(){setData(d=>({...d,reviews:[{id:'r'+Date.now(),date:todayKey(),ratings,wins,blockers,nextFocus,aiReview},...d.reviews],lastReviewDate:todayKey()}));setSaved(true);}
+  return React.createElement('div',null,
+    data.lastReviewDate&&React.createElement('div',{style:{fontSize:12,color:'var(--ink3)',marginBottom:12,fontFamily:'var(--mono)'}},`Last review: ${data.lastReviewDate}`),
+    React.createElement('div',{className:'card'},
+      React.createElement('div',{className:'card-title'},'Rate your week'),
+      Object.keys(areaLabels).map(area=>React.createElement('div',{key:area,className:'rating-row'},
+        React.createElement('div',{className:'rating-label'},areaLabels[area]),
+        React.createElement('div',{className:'stars'},[1,2,3,4,5].map(n=>React.createElement('span',{key:n,className:`star${ratings[area]>=n?' on':''}`,onClick:()=>setRatings(r=>({...r,[area]:n}))},'★'))),
+      )),
+    ),
+    React.createElement('div',{className:'card'},
+      React.createElement('div',{className:'card-title'},'Reflect'),
+      React.createElement('div',{style:{marginBottom:10}},React.createElement('label',{style:{fontSize:12,fontWeight:600,color:'var(--ink3)',display:'block',marginBottom:5,textTransform:'uppercase',letterSpacing:'.4px'}},'Wins'),React.createElement('textarea',{className:'input',value:wins,onChange:e=>setWins(e.target.value),placeholder:'What went well?'})),
+      React.createElement('div',{style:{marginBottom:10}},React.createElement('label',{style:{fontSize:12,fontWeight:600,color:'var(--ink3)',display:'block',marginBottom:5,textTransform:'uppercase',letterSpacing:'.4px'}},'Blockers'),React.createElement('textarea',{className:'input',value:blockers,onChange:e=>setBlockers(e.target.value),placeholder:'What slowed you down?'})),
+      React.createElement('div',null,React.createElement('label',{style:{fontSize:12,fontWeight:600,color:'var(--ink3)',display:'block',marginBottom:5,textTransform:'uppercase',letterSpacing:'.4px'}},'Next week focus'),React.createElement('textarea',{className:'input',value:nextFocus,onChange:e=>setNextFocus(e.target.value),placeholder:'One thing that makes next week a win'})),
+    ),
+    React.createElement('button',{className:'btn btn-primary btn-full',style:{marginBottom:10},onClick:generateReview,disabled:aiLoading},aiLoading?'Generating...':'⚡ Get AI coaching review'),
+    aiReview&&React.createElement('div',null,
+      React.createElement('div',{className:'coach-box',style:{marginBottom:10}},React.createElement('div',{className:'coach-label'},'⚡ Week in review'),React.createElement('div',{className:'coach-text'},aiReview)),
+      !saved&&React.createElement('button',{className:'btn btn-ghost btn-full',onClick:save},'Save this review'),
+      saved&&React.createElement('div',{style:{textAlign:'center',color:'var(--green)',fontWeight:600,padding:'8px 0'}},'✓ Saved'),
+    ),
+    data.reviews.slice(0,3).length>0&&React.createElement('div',{style:{marginTop:16}},
+      React.createElement('div',{className:'section-head'},'Past reviews'),
+      data.reviews.slice(0,3).map(r=>React.createElement('div',{key:r.id,className:'card'},
+        React.createElement('div',{style:{display:'flex',alignItems:'center',gap:8,marginBottom:6}},
+          React.createElement('div',{style:{fontFamily:'var(--mono)',fontSize:12,color:'var(--ink3)'}},r.date),
+          Object.entries(r.ratings||{}).map(([k,v])=>v>0?React.createElement('span',{key:k,className:'tag',style:{fontSize:10}},`${k[0].toUpperCase()} ${v}★`):null),
+        ),
+        r.aiReview&&React.createElement('div',{style:{fontSize:13,color:'var(--ink2)',lineHeight:1.6}},r.aiReview),
+      )),
+    ),
+  );
+}
+
+// ── APP ───────────────────────────────────────────────────────────────────
+function App(){
+  const [data,setDataRaw]=useState(()=>loadData()||defaultData());
+  const [tab,setTab]=useState('dashboard');
+  const [selectedProject,setSelectedProject]=useState(null);
+  function setData(u){setDataRaw(p=>{const n=typeof u==='function'?u(p):u;saveData(n);return n;})}
+  const openCount=data.projects.flatMap(p=>p.tasks.filter(t=>!t.done)).length;
+  const overdueCount=data.projects.flatMap(p=>p.tasks.filter(t=>!t.done&&t.due&&t.due<todayKey())).length;
+  const tabs=[
+    {id:'dashboard',icon:'🏠',label:'Home'},
+    {id:'projects',icon:'📋',label:'Projects',badge:overdueCount||null},
+    {id:'habits',icon:'🔁',label:'Habits'},
+    {id:'schedule',icon:'📅',label:'Schedule'},
+    {id:'review',icon:'🔍',label:'Review'},
+  ];
+  const titles={dashboard:'Life OS',projects:selectedProject?data.projects.find(p=>p.id===selectedProject)?.name||'Projects':'Projects',habits:'Habits',schedule:'Schedule',review:'Weekly Review'};
+  const todayStr=new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+  return React.createElement('div',{id:'root'},
+    React.createElement('div',{className:'topbar'},
+      React.createElement('div',null,
+        React.createElement('div',{className:'topbar-title'},titles[tab]||'Life OS'),
+        React.createElement('div',{className:'topbar-sub'},todayStr),
+      ),
+    ),
+    React.createElement('div',{className:'scroll-area'},
+      tab==='dashboard'&&React.createElement(DashboardTab,{data,setData,setTab,setSelectedProject}),
+      tab==='projects'&&React.createElement(ProjectsTab,{data,setData,selectedProject,setSelectedProject}),
+      tab==='habits'&&React.createElement(HabitsTab,{data,setData}),
+      tab==='schedule'&&React.createElement(ScheduleTab,{data,setData}),
+      tab==='review'&&React.createElement(ReviewTab,{data,setData}),
+    ),
+    React.createElement('div',{className:'bottom-nav'},
+      tabs.map(t=>React.createElement('button',{key:t.id,className:`tab-btn${tab===t.id?' active':''}`,onClick:()=>{setTab(t.id);if(t.id!=='projects')setSelectedProject(null);}},
+        t.badge&&React.createElement('div',{className:'tab-badge'},t.badge),
+        React.createElement('span',{className:'tab-icon'},t.icon),
+        React.createElement('span',null,t.label),
+      ))
+    ),
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
+
+</script>
+</body>
+</html>
