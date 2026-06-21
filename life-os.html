@@ -221,7 +221,7 @@ function formatDue(due){
 
 // ── CFA LEVEL II TASK GENERATOR ──────────────────────────────────────────
 function buildCFATasks(){
-  const start=new Date('2026-06-17');
+  const start=new Date('2026-06-21');
   function due(offsetDays){return addDays(start,offsetDays);}
 
   // Phase 1: Prerequisites (days 0–10)
@@ -231,18 +231,18 @@ function buildCFATasks(){
     {id:'cfa-pr3',text:'Prerequisite: Quantitative Methods — complete reading + EOC',done:false,priority:'high',due:due(9),phase:1},
   ];
 
-  // Phase 2: Core modules (days 10–78) — weighted by exam weight
+  // Phase 2: Core modules (days 10–88) — weighted by exam weight
   const modules=[
-    {name:'Ethics',short:'Ethics',readings:4,weight:10,start:10,end:18},
-    {name:'Quantitative Methods',short:'Quant',readings:4,weight:6,start:18,end:23},
-    {name:'Economics',short:'Econ',readings:4,weight:6,start:23,end:28},
-    {name:'Financial Statement Analysis',short:'FSA',readings:6,weight:13,start:28,end:38},
-    {name:'Corporate Issuers',short:'Corp',readings:3,weight:8,start:38,end:44},
-    {name:'Equity Valuation',short:'Equity',readings:6,weight:13,start:44,end:54},
-    {name:'Fixed Income',short:'FI',readings:5,weight:11,start:54,end:63},
-    {name:'Derivatives',short:'Deriv',readings:4,weight:6,start:63,end:68},
-    {name:'Alternative Investments',short:'Alts',readings:3,weight:6,start:68,end:73},
-    {name:'Portfolio Management',short:'PM',readings:4,weight:8,start:73,end:78},
+    {name:'Ethics',short:'Ethics',readings:4,weight:10,start:10,end:19},
+    {name:'Quantitative Methods',short:'Quant',readings:4,weight:6,start:19,end:25},
+    {name:'Economics',short:'Econ',readings:4,weight:6,start:25,end:31},
+    {name:'Financial Statement Analysis',short:'FSA',readings:6,weight:13,start:31,end:42},
+    {name:'Corporate Issuers',short:'Corp',readings:3,weight:8,start:42,end:49},
+    {name:'Equity Valuation',short:'Equity',readings:6,weight:13,start:49,end:60},
+    {name:'Fixed Income',short:'FI',readings:5,weight:11,start:60,end:69},
+    {name:'Derivatives',short:'Deriv',readings:4,weight:6,start:69,end:75},
+    {name:'Alternative Investments',short:'Alts',readings:3,weight:6,start:75,end:81},
+    {name:'Portfolio Management',short:'PM',readings:4,weight:8,start:81,end:88},
   ];
 
   const coreTasks=[];
@@ -270,23 +270,24 @@ function buildCFATasks(){
     });
   });
 
-  // Phase 3: Mock exam week (days 78–85)
+  // Phase 3: Mock exam week (days 88–95)
   const mockTasks=[
-    {id:'cfa-mock1-am',text:'Mock Exam 1 — AM session (timed, full conditions)',done:false,priority:'high',due:due(80),phase:3},
-    {id:'cfa-mock1-pm',text:'Mock Exam 1 — PM session (timed, full conditions)',done:false,priority:'high',due:due(80),phase:3},
-    {id:'cfa-mock1-review',text:'Mock Exam 1 — Deep review: score every item set, flag weak topics',done:false,priority:'high',due:due(84),phase:3},
-    {id:'cfa-mock1-log',text:'Build weak topic list and prioritization plan for Phase 4',done:false,priority:'high',due:due(85),phase:3},
+    {id:'cfa-mock1-am',text:'Mock Exam 1 — AM session (timed, full conditions)',done:false,priority:'high',due:due(90),phase:3},
+    {id:'cfa-mock1-pm',text:'Mock Exam 1 — PM session (timed, full conditions)',done:false,priority:'high',due:due(90),phase:3},
+    {id:'cfa-mock1-review',text:'Mock Exam 1 — Deep review: score every item set, flag weak topics',done:false,priority:'high',due:due(93),phase:3},
+    {id:'cfa-mock1-log',text:'Build weak topic list and prioritization plan for Phase 4',done:false,priority:'high',due:due(95),phase:3},
   ];
 
-  // Phase 4: Weak area review (days 85–137) — placeholder tasks, user adjusts after mock
+  // Phase 4: Weak area review (days 95–154) — 59-day buffer. Update topic names after mock.
   const weakTasks=[
-    {id:'cfa-weak1',text:'Phase 4: Deep dive — Weak Topic #1 (update after mock exam)',done:false,priority:'high',due:due(95),phase:4},
-    {id:'cfa-weak2',text:'Phase 4: Deep dive — Weak Topic #2 (update after mock exam)',done:false,priority:'high',due:due(105),phase:4},
-    {id:'cfa-weak3',text:'Phase 4: Deep dive — Weak Topic #3 (update after mock exam)',done:false,priority:'med',due:due(115),phase:4},
-    {id:'cfa-mock2-full',text:'Mock Exam 2 — Full AM+PM (timed)',done:false,priority:'high',due:due(120),phase:4},
-    {id:'cfa-mock2-review',text:'Mock Exam 2 — Review and final gap analysis',done:false,priority:'high',due:due(122),phase:4},
-    {id:'cfa-final-review',text:'Final formula sheet review and ethics re-read',done:false,priority:'high',due:due(133),phase:4},
-    {id:'cfa-exam-day',text:'🎯 CFA Level II Exam Day',done:false,priority:'high',due:due(137),phase:4},
+    {id:'cfa-weak1',text:'Phase 4: Deep dive — Weak Topic #1 (update after mock exam)',done:false,priority:'high',due:due(108),phase:4},
+    {id:'cfa-weak2',text:'Phase 4: Deep dive — Weak Topic #2 (update after mock exam)',done:false,priority:'high',due:due(120),phase:4},
+    {id:'cfa-weak3',text:'Phase 4: Deep dive — Weak Topic #3 (update after mock exam)',done:false,priority:'med',due:due(130),phase:4},
+    {id:'cfa-mock2-full',text:'Mock Exam 2 — Full AM+PM (timed)',done:false,priority:'high',due:due(137),phase:4},
+    {id:'cfa-mock2-review',text:'Mock Exam 2 — Review and final gap analysis',done:false,priority:'high',due:due(139),phase:4},
+    {id:'cfa-mock3-full',text:'Mock Exam 3 — Final full simulation (timed)',done:false,priority:'high',due:due(146),phase:4},
+    {id:'cfa-final-review',text:'Final formula sheet review and ethics re-read',done:false,priority:'high',due:due(151),phase:4},
+    {id:'cfa-exam-day',text:'🎯 CFA Level II Exam — Nov 22, 2026',done:false,priority:'high',due:due(154),phase:4},
   ];
 
   return [...prereqTasks,...coreTasks,...mockTasks,...weakTasks];
@@ -297,7 +298,7 @@ function defaultData(){
   return {
     projects:[
       {id:'p1',name:'CFA Level II',area:'career',color:'career',pct:0,autoCalc:true,
-       notes:'Target: Nov 1 2026 exam. 4 phases: prereqs → core modules → mock → weak areas. 52-day buffer.',
+       notes:'Target: Nov 22 2026 exam. 4 phases: prereqs (days 0-10) → core modules (days 10-88) → mock (days 88-95) → weak areas (days 95-154). 59-day buffer.',
        priority:0,tasks:cfaTasks},
       {id:'p2',name:'Baird/Artisan Outreach',area:'career',color:'career',pct:10,autoCalc:false,notes:'Use existing coverage relationship',priority:1,tasks:[
         {id:'t7',text:'Update resume for AM positioning',done:false,priority:'high',due:null},
@@ -343,7 +344,7 @@ async function askClaude(prompt){
   const res=await fetch('https://api.anthropic.com/v1/messages',{
     method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,
-      system:`You are Daniel's direct personal executive coach in his Life OS. Daniel: VP at US Bancorp Fund Services, pursuing CFA Level II (target Nov 2026), targeting Baird/Artisan Partners. Married, young child, Milwaukee WI. Be specific, concise (2-4 sentences), direct. No generic advice. No empty praise.`,
+      system:`You are Daniel's direct personal executive coach in his Life OS. Daniel: VP at US Bancorp Fund Services, pursuing CFA Level II (exam Nov 22 2026), targeting Baird/Artisan Partners. Married, 3 young kids, Wauwatosa WI. Be specific, concise (2-4 sentences), direct. No generic advice. No empty praise.`,
       messages:[{role:'user',content:prompt}]})
   });
   const d=await res.json();
